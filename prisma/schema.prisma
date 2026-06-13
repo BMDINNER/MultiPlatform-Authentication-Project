@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  apiKey      String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  users       ProjectUser[]
+
+  @@map("projects")
+}
+
+model User {
+  id               String        @id @default(uuid())
+  email            String        @unique
+  username         String?
+  password         String?
+  provider         String        @default("local")
+  providerId       String?
+  refreshToken     String?
+  resetToken       String?       @unique
+  resetTokenExpiry DateTime?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  projectUsers     ProjectUser[]
+  oauthTokens      OAuthToken[]
+  sessions         Session[]
+
+  @@map("users")
+}
+
+model ProjectUser {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  userId    String   @map("user_id")
+  role      String   @default("user")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([projectId, userId])
+  @@map("project_users")
+}
+
+model OAuthToken {
+  id           String   @id @default(uuid())
+  accessToken  String   @unique @map("access_token")
+  refreshToken String?  @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  scope        String?
+  clientId     String   @map("client_id")
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("oauth_tokens")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  expires      DateTime
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("sessions")
+}
+
+model OAuthClient {
+  id           String   @id @default(uuid())
+  clientId     String   @unique @map("client_id")
+  clientSecret String   @map("client_secret")
+  redirectUris String[] @map("redirect_uris")
+  grants       String[]
+  userId       String?  @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("oauth_clients")
+}
