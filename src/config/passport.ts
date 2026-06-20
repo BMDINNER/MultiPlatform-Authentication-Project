@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy, Profile as GitHubProfile } from 'passport-github2';
 import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
-import { config } from './index';
+import { config } from './index.js';
 import { VerifyCallback } from 'passport-oauth2';
 
 interface OAuthProfile {

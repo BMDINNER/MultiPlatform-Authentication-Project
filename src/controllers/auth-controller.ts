@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { AuthService } from '../services/auth-service';
-import { AuthRequest } from '../middleware/auth';
+import { AuthService } from '../services/auth-service.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const authService = new AuthService();
 

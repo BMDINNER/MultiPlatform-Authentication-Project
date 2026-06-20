@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { hashPassword, comparePassword } from '../utils/password';
-import { generateTokens, verifyRefreshToken } from '../utils/jwt';
-import { RegisterRequest, LoginRequest, AuthResponse, User, Project } from '../types';
+import { hashPassword, comparePassword } from '../utils/password.js';
+import { generateTokens, verifyRefreshToken } from '../utils/jwt.js';
+import { RegisterRequest, LoginRequest, AuthResponse, User, Project } from '../types/index.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 

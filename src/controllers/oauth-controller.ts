@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { AuthService } from '../services/auth-service';
-import { generateTokens } from '../utils/jwt';
-import { config } from '../config';
+import { AuthService } from '../services/auth-service.js';
+import { generateTokens } from '../utils/jwt.js';
+import { config } from '../config/index.js';
+
 
 const authService = new AuthService();
 

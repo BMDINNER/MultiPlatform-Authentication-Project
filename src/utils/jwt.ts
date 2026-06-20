@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { config } from '../config';
-import { TokenPayload, RefreshTokenPayload } from '../types';
+import { config } from '../config/index.js';
+import { TokenPayload, RefreshTokenPayload } from '../types/index.js';
 
 export const generateTokens = (payload: TokenPayload) => {
   const token = jwt.sign(

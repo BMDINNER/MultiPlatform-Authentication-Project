@@ -1,11 +1,13 @@
 {
   "name": "auth-service",
   "version": "1.0.0",
+  "type": "module",
   "description": "Multiple Platform Authentication Service",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:prod": "node dist/server.js",
     "dev": "nodemon src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

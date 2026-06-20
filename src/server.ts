@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { config } from './config';
-import authRoutes from './routes/auth-routes';
-import oauthRoutes from './routes/oauth-routes';
-import passport from './config/passport';
+import { config } from './config/index.js';
+import authRoutes from './routes/auth-routes.js';
+import oauthRoutes from './routes/oauth-routes.js';
+import passport from './config/passport.js';
 
 const app = express();
 
