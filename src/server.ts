@@ -5,11 +5,12 @@ import { config } from './config/index.js';
 import authRoutes from './routes/auth-routes.js';
 import oauthRoutes from './routes/oauth-routes.js';
 import passport from './config/passport.js';
+import tokenRoutes from './routes/token-routes.js';
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({
+app.use(cors({  
   origin: config.clientUrl,
   credentials: true
 }));
@@ -18,6 +19,7 @@ app.use(passport.initialize());
 
 app.use('/auth', authRoutes);
 app.use('/auth/oauth', oauthRoutes);
+app.use('/auth/token', tokenRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
