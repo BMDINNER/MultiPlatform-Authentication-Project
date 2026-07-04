@@ -13,3 +13,13 @@ README.md
 dist
 coverage
 .nyc_output
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+prisma/*.db
+prisma/*.db-journal
