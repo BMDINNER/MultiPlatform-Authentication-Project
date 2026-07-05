@@ -6,6 +6,7 @@ export interface User {
   provider: string;
   providerId?: string | null;
   refreshToken?: string | null;
+  profile?: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,7 +46,7 @@ export interface RefreshTokenPayload {
 export interface AuthResponse {
   token: string;
   refreshToken: string;
-  user: Omit<User, 'password' | 'refreshToken'>;
+  user: Omit<User, 'password' | 'refreshToken' | 'resetToken' | 'resetTokenExpiry'>;
   project?: {
     id: string;
     name: string;

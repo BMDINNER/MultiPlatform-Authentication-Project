@@ -1,0 +1,47 @@
+services:
+  postgres_auth:
+    image: postgres:15-alpine
+    container_name: auth_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: authdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    networks:
+      - platform_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth_service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres@postgres_auth:5432/authdb
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CLIENT_URL=http://localhost:3000
+    depends_on:
+      postgres_auth:
+        condition: service_healthy
+    networks:
+      - platform_network
+    restart: unless-stopped
+
+volumes:
+  postgres_auth_data:
+
+networks:
+  platform_network:
+    external: true

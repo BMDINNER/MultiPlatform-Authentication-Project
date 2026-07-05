@@ -26,6 +26,7 @@ model User {
   password         String?
   provider         String        @default("local")
   providerId       String?
+  role             String        @default("user")
   refreshToken     String?
   resetToken       String?       @unique
   resetTokenExpiry DateTime?

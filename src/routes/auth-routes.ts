@@ -26,21 +26,17 @@ const passwordResetLimiter = rateLimit({
   message: 'Too many password reset attempts, please try again later'
 });
 
-// Public routes
 router.post('/register', registerLimiter, asyncHandler(authController.register.bind(authController)));
 router.post('/login', loginLimiter, asyncHandler(authController.login.bind(authController)));
 router.post('/refresh', asyncHandler(authController.refreshToken.bind(authController)));
 router.post('/forgot-password', passwordResetLimiter, asyncHandler(authController.requestPasswordReset.bind(authController)));
 router.post('/reset-password', passwordResetLimiter, asyncHandler(authController.resetPassword.bind(authController)));
 
-// Protected routes
 router.post('/logout', authenticate, asyncHandler(authController.logout.bind(authController)));
 router.get('/verify', authenticate, asyncHandler(authController.verify.bind(authController)));
 
-// Project management endpoints
-router.post('/projects', asyncHandler(authController.createProject.bind(authController)));
+router.post('/projects', authenticate, asyncHandler(authController.createProject.bind(authController)));
 
-// Project-specific auth with API key validation
 router.post('/project/register', validateProjectApiKey, asyncHandler(authController.register.bind(authController)));
 router.post('/project/login', validateProjectApiKey, asyncHandler(authController.login.bind(authController)));
 

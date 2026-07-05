@@ -4,16 +4,35 @@ import helmet from 'helmet';
 import { config } from './config/index.js';
 import authRoutes from './routes/auth-routes.js';
 import oauthRoutes from './routes/oauth-routes.js';
-import passport from './config/passport.js';
 import tokenRoutes from './routes/token-routes.js';
+import passport from './config/passport.js';
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({  
-  origin: config.clientUrl,
-  credentials: true
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3005',
+  'http://localhost:3001',
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'x-api-key', 'x-project-id']
 }));
+
 app.use(express.json());
 app.use(passport.initialize());
 

@@ -8,20 +8,52 @@ export class AuthController {
   async register(req: Request, res: Response): Promise<Response> {
     try {
       const apiKey = req.headers['x-api-key'] as string;
+      console.log('=== AUTH CONTROLLER REGISTER ===');
+      console.log('Email:', req.body.email);
+      console.log('ProjectId:', req.body.projectId);
+      console.log('API Key:', apiKey);
+      
+      if (!req.body.projectId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Project ID is required'
+        });
+      }
+      
       const result = await authService.register(req.body, apiKey);
       return res.json(result);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message });
+      console.error('Register error:', error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
   async login(req: Request, res: Response): Promise<Response> {
     try {
       const apiKey = req.headers['x-api-key'] as string;
+      console.log('=== AUTH CONTROLLER LOGIN ===');
+      console.log('Email:', req.body.email);
+      console.log('ProjectId:', req.body.projectId);
+      console.log('API Key:', apiKey);
+      
+      if (!req.body.projectId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Project ID is required'
+        });
+      }
+      
       const result = await authService.login(req.body, apiKey);
       return res.json(result);
     } catch (error: any) {
-      return res.status(401).json({ message: error.message });
+      console.error('Login error:', error.message);
+      return res.status(401).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
@@ -31,7 +63,11 @@ export class AuthController {
       const result = await authService.refreshToken(refreshToken);
       return res.json(result);
     } catch (error: any) {
-      return res.status(401).json({ message: error.message });
+      console.error('Refresh token error:', error.message);
+      return res.status(401).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
@@ -39,25 +75,45 @@ export class AuthController {
     try {
       const refreshToken = req.body.refreshToken;
       if (!req.user) {
-        return res.status(401).json({ message: 'Not authenticated' });
+        return res.status(401).json({
+          success: false,
+          message: 'Not authenticated'
+        });
       }
       await authService.logout(req.user.userId, refreshToken);
-      return res.json({ message: 'Logged out successfully' });
+      return res.json({
+        success: true,
+        message: 'Logged out successfully'
+      });
     } catch (error: any) {
-      return res.status(400).json({ message: error.message });
+      console.error('Logout error:', error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
   async verify(req: AuthRequest, res: Response): Promise<Response> {
     try {
       if (!req.user) {
-        return res.status(401).json({ message: 'Not authenticated' });
+        return res.status(401).json({
+          success: false,
+          message: 'Not authenticated'
+        });
       }
       const projectId = req.headers['x-project-id'] as string;
       const user = await authService.verifyToken(req.user.userId, projectId);
-      return res.json(user);
+      return res.json({
+        success: true,
+        user
+      });
     } catch (error: any) {
-      return res.status(401).json({ message: error.message });
+      console.error('Verify error:', error.message);
+      return res.status(401).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
@@ -66,17 +122,24 @@ export class AuthController {
       const { email } = req.body;
       
       if (!email) {
-        return res.status(400).json({ message: 'Email is required' });
+        return res.status(400).json({
+          success: false,
+          message: 'Email is required'
+        });
       }
 
       await authService.requestPasswordReset(email);
       
-      // Always return success to prevent email enumeration
-      return res.json({ 
-        message: 'If an account exists with this email, you will receive a password reset link.' 
+      return res.json({
+        success: true,
+        message: 'If an account exists with this email, you will receive a password reset link.'
       });
     } catch (error: any) {
-      return res.status(400).json({ message: error.message });
+      console.error('Password reset request error:', error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
@@ -85,33 +148,64 @@ export class AuthController {
       const { token, newPassword } = req.body;
       
       if (!token || !newPassword) {
-        return res.status(400).json({ message: 'Token and new password are required' });
+        return res.status(400).json({
+          success: false,
+          message: 'Token and new password are required'
+        });
       }
 
       if (newPassword.length < 6) {
-        return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters'
+        });
       }
 
       await authService.resetPassword(token, newPassword);
       
-      return res.json({ message: 'Password reset successfully' });
+      return res.json({
+        success: true,
+        message: 'Password reset successfully'
+      });
     } catch (error: any) {
-      return res.status(400).json({ message: error.message });
+      console.error('Reset password error:', error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
   async createProject(req: Request, res: Response): Promise<Response> {
     try {
       const { name, description } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({
+          success: false,
+          message: 'Project name is required'
+        });
+      }
+
       const project = await authService.createProject(name, description);
+      
+      console.log('Project created:', { id: project.id, name: project.name, apiKey: project.apiKey });
+      
       return res.json({
-        id: project.id,
-        name: project.name,
-        apiKey: project.apiKey,
-        description: project.description
+        success: true,
+        data: {
+          id: project.id,
+          name: project.name,
+          apiKey: project.apiKey,
+          description: project.description
+        }
       });
     } catch (error: any) {
-      return res.status(400).json({ message: error.message });
+      console.error('Create project error:', error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 }

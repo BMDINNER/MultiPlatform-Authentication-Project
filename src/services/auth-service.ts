@@ -9,12 +9,33 @@ const prisma = new PrismaClient();
 
 export class AuthService {
   async register(data: RegisterRequest, apiKey?: string): Promise<AuthResponse> {
+    console.log('=== AUTH SERVICE REGISTER ===');
+    console.log('Email:', data.email);
+    console.log('ProjectId:', data.projectId);
+    console.log('API Key:', apiKey);
+
+    if (!data.projectId) {
+      throw new Error('Project ID is required');
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email }
     });
 
     if (existingUser) {
       throw new Error('User already exists');
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: data.projectId }
+    });
+
+    if (!project) {
+      throw new Error('Project not found. Please contact administrator.');
+    }
+
+    if (apiKey && project.apiKey !== apiKey) {
+      throw new Error('Invalid API key for project');
     }
 
     const hashedPassword = await hashPassword(data.password);
@@ -28,35 +49,16 @@ export class AuthService {
       }
     });
 
-    let projectDetails = null;
-    let projectUserDetails = null;
-
-    if (data.projectId) { 
-      const project = await prisma.project.findUnique({
-        where: { id: data.projectId }
-      });
-
-      if (!project) {
-        throw new Error('Project not found');
+    const projectUser = await prisma.projectUser.create({
+      data: {
+        projectId: project.id,
+        userId: user.id,
+        role: 'user'
+      },
+      include: {
+        project: true
       }
-
-      if (apiKey && project.apiKey !== apiKey) {
-        throw new Error('Invalid API key for project');
-      }
-
-      projectUserDetails = await prisma.projectUser.create({
-        data: {
-          projectId: project.id,
-          userId: user.id,
-          role: 'user'
-        },
-        include: {
-          project: true
-        }
-      });
-      
-      projectDetails = project;
-    }
+    });
 
     const { token, refreshToken } = generateTokens({
       userId: user.id,
@@ -75,15 +77,24 @@ export class AuthService {
       token,
       refreshToken,
       user: userWithoutSensitive,
-      project: projectUserDetails ? {
-        id: projectUserDetails.project.id,
-        name: projectUserDetails.project.name,
-        role: projectUserDetails.role
-      } : undefined
+      project: {
+        id: projectUser.project.id,
+        name: projectUser.project.name,
+        role: projectUser.role
+      }
     };
   }
 
   async login(credentials: LoginRequest, apiKey?: string): Promise<AuthResponse> {
+    console.log('=== AUTH SERVICE LOGIN ===');
+    console.log('Email:', credentials.email);
+    console.log('ProjectId:', credentials.projectId);
+    console.log('API Key:', apiKey);
+
+    if (!credentials.projectId) {
+      throw new Error('Project ID is required');
+    }
+
     const user = await prisma.user.findUnique({
       where: { email: credentials.email }
     });
@@ -98,43 +109,39 @@ export class AuthService {
       throw new Error('Invalid credentials');
     }
 
-    let projectUserDetails = null;
+    const project = await prisma.project.findUnique({
+      where: { id: credentials.projectId }
+    });
 
-    if (credentials.projectId) {
-      const project = await prisma.project.findUnique({
-        where: { id: credentials.projectId }
-      });
+    if (!project) {
+      throw new Error('Project not found');
+    }
 
-      if (!project) {
-        throw new Error('Project not found');
+    if (apiKey && project.apiKey !== apiKey) {
+      throw new Error('Invalid API key for project');
+    }
+
+    let projectUser = await prisma.projectUser.findFirst({
+      where: {
+        projectId: project.id,
+        userId: user.id
+      },
+      include: {
+        project: true
       }
+    });
 
-      if (apiKey && project.apiKey !== apiKey) {
-        throw new Error('Invalid API key for project');
-      }
-
-      projectUserDetails = await prisma.projectUser.findFirst({
-        where: {
+    if (!projectUser) {
+      projectUser = await prisma.projectUser.create({
+        data: {
           projectId: project.id,
-          userId: user.id
+          userId: user.id,
+          role: 'user'
         },
         include: {
           project: true
         }
       });
-
-      if (!projectUserDetails) {
-        projectUserDetails = await prisma.projectUser.create({
-          data: {
-            projectId: project.id,
-            userId: user.id,
-            role: 'user'
-          },
-          include: {
-            project: true
-          }
-        });
-      }
     }
 
     const { token, refreshToken } = generateTokens({
@@ -154,11 +161,11 @@ export class AuthService {
       token,
       refreshToken,
       user: userWithoutSensitive,
-      project: projectUserDetails ? {
-        id: projectUserDetails.project.id,
-        name: projectUserDetails.project.name,
-        role: projectUserDetails.role
-      } : undefined
+      project: {
+        id: projectUser.project.id,
+        name: projectUser.project.name,
+        role: projectUser.role
+      }
     };
   }
 
@@ -224,16 +231,13 @@ export class AuthService {
     });
 
     if (!user) {
-      // Return silently for security (don't reveal if email exists)
       console.log(`Password reset requested for non-existent email: ${email}`);
       return;
     }
 
-    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+    const resetTokenExpiry = new Date(Date.now() + 3600000);
 
-    // Store reset token in database
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -242,12 +246,8 @@ export class AuthService {
       }
     });
 
-    // Log the reset link for development
     const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
     console.log(`Password reset link for ${email}: ${resetLink}`);
-    
-    // TODO: Send email in production
-    // await this.sendPasswordResetEmail(email, resetToken);
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
