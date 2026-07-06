@@ -30,3 +30,39 @@ const generateTokenId = (): string => {
   return Math.random().toString(36).substring(2, 15) + 
   Math.random().toString(36).substring(2, 15);
 };
+
+export const blacklistToken = async (token: string): Promise<void> => {
+  try {
+    const decoded = jwt.decode(token) as any;
+    if (!decoded || !decoded.exp) {
+      throw new Error('Invalid token');
+    }
+
+    const expiresIn = (decoded.exp * 1000) - Date.now();
+    
+    if (expiresIn > 0) {
+      const tokenBlacklist = global.tokenBlacklist || new Map();
+      tokenBlacklist.set(token, true);
+      
+      setTimeout(() => {
+        tokenBlacklist.delete(token);
+      }, expiresIn);
+      
+      global.tokenBlacklist = tokenBlacklist;
+    }
+  } catch (error) {
+    console.error('Failed to blacklist token:', error);
+  }
+};
+
+export const isTokenBlacklisted = (token: string): boolean => {
+  const tokenBlacklist = global.tokenBlacklist || new Map();
+  return tokenBlacklist.has(token);
+};
+
+export const blacklistUserTokens = async (userId: string): Promise<void> => {
+  const userBlacklist = global.userTokenBlacklist || new Map();
+  const newTokenId = generateTokenId();
+  userBlacklist.set(userId, newTokenId);
+  global.userTokenBlacklist = userBlacklist;
+};
