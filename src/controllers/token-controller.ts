@@ -51,6 +51,7 @@ export const verifyAccessToken = async (req: Request, res: Response) => {
       user: {
         userId: payload.userId,
         email: payload.email,
+        username: user.username || user.email.split('@')[0],
         projectId: payload.projectId
       }
     });
@@ -200,7 +201,11 @@ export const validateSession = async (req: Request, res: Response) => {
       user: {
         userId: payload.userId,
         email: payload.email,
-        projectId: payload.projectId
+        username: user.username || user.email.split('@')[0],
+        projectId: payload.projectId,
+        provider: user.provider,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
       }
     });
   } catch (error: any) {
