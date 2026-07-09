@@ -338,6 +338,6 @@ export class AuthService {
       where: { id: projectId }
     });
 
-    return project?.apiKey --- apiKey;
+    return project?.apiKey === apiKey;
   }
 }
