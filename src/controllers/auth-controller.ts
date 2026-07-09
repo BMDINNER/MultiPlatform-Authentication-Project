@@ -8,7 +8,7 @@ export class AuthController {
   async register(req: Request, res: Response): Promise<Response> {
     try {
       const apiKey = req.headers['x-api-key'] as string;
-      console.log('--- AUTH CONTROLLER REGISTER ---');
+      console.log('=== AUTH CONTROLLER REGISTER ===');
       console.log('Email:', req.body.email);
       console.log('ProjectId:', req.body.projectId);
       console.log('API Key:', apiKey);
@@ -34,7 +34,7 @@ export class AuthController {
   async login(req: Request, res: Response): Promise<Response> {
     try {
       const apiKey = req.headers['x-api-key'] as string;
-      console.log('--- AUTH CONTROLLER LOGIN ---');
+      console.log('=== AUTH CONTROLLER LOGIN ===');
       console.log('Email:', req.body.email);
       console.log('ProjectId:', req.body.projectId);
       console.log('API Key:', apiKey);

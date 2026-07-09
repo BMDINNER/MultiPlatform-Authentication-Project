@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 
 export class AuthService {
   async register(data: RegisterRequest, apiKey?: string): Promise<AuthResponse> {
-    console.log('--- AUTH SERVICE REGISTER ---');
+    console.log('=== AUTH SERVICE REGISTER ===');
     console.log('Email:', data.email);
     console.log('ProjectId:', data.projectId);
     console.log('API Key:', apiKey);
@@ -86,7 +86,7 @@ export class AuthService {
   }
 
   async login(credentials: LoginRequest, apiKey?: string): Promise<AuthResponse> {
-    console.log('--- AUTH SERVICE LOGIN ---');
+    console.log('=== AUTH SERVICE LOGIN ===');
     console.log('Email:', credentials.email);
     console.log('ProjectId:', credentials.projectId);
     console.log('API Key:', apiKey);
