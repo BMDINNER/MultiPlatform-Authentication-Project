@@ -35,6 +35,8 @@ router.post('/reset-password', passwordResetLimiter, asyncHandler(authController
 router.post('/logout', authenticate, asyncHandler(authController.logout.bind(authController)));
 router.get('/verify', authenticate, asyncHandler(authController.verify.bind(authController)));
 
+router.put('/email', authenticate, asyncHandler(authController.updateEmail.bind(authController)));
+
 router.post('/projects', authenticate, asyncHandler(authController.createProject.bind(authController)));
 
 router.post('/project/register', validateProjectApiKey, asyncHandler(authController.register.bind(authController)));
