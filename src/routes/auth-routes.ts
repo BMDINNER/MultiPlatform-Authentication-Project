@@ -36,6 +36,7 @@ router.post('/logout', authenticate, asyncHandler(authController.logout.bind(aut
 router.get('/verify', authenticate, asyncHandler(authController.verify.bind(authController)));
 
 router.put('/email', authenticate, asyncHandler(authController.updateEmail.bind(authController)));
+router.put('/change-password', authenticate, asyncHandler(authController.changePassword.bind(authController)));
 
 router.post('/projects', authenticate, asyncHandler(authController.createProject.bind(authController)));
 

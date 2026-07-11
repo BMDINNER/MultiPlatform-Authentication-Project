@@ -2,10 +2,9 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/auth-service.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { PrismaClient } from '@prisma/client';
-import { comparePassword } from '../utils/password.js';
+import { comparePassword, hashPassword } from '../utils/password.js';
 
 const prisma = new PrismaClient();
-
 const authService = new AuthService();
 
 export class AuthController {
@@ -180,74 +179,138 @@ export class AuthController {
     }
   }
 
-  async updateEmail(req: AuthRequest, res: Response): Promise<Response> {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
+  async changePassword(req: AuthRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Not authenticated'
+        });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password and new password are required'
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 6 characters'
+        });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId }
+      });
+
+      if (!user || !user.password) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials'
+        });
+      }
+
+      const isValid = await comparePassword(currentPassword, user.password);
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Current password is incorrect'
+        });
+      }
+
+      const hashedPassword = await hashPassword(newPassword);
+
+      await prisma.user.update({
+        where: { id: req.user.userId },
+        data: { password: hashedPassword }
+      });
+
+      return res.json({
+        success: true,
+        message: 'Password changed successfully'
+      });
+    } catch (error: any) {
+      console.error('Change password error:', error.message);
+      return res.status(500).json({
         success: false,
-        message: 'Not authenticated'
+        message: error.message
       });
     }
-
-    const { newEmail, password } = req.body;
-    
-    if (!newEmail || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'New email and password are required'
-      });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId }
-    });
-
-    if (!user || !user.password) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-
-    const isValid = await comparePassword(password, user.password);
-    if (!isValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid password'
-      });
-    }
-
-    const existingUser = await prisma.user.findUnique({
-      where: { email: newEmail }
-    });
-
-    if (existingUser && existingUser.id !== req.user.userId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is already in use'
-      });
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { id: req.user.userId },
-      data: { email: newEmail }
-    });
-
-    const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, ...userWithoutSensitive } = updatedUser;
-
-    return res.json({
-      success: true,
-      message: 'Email updated successfully',
-      user: userWithoutSensitive
-    });
-  } catch (error: any) {
-    console.error('Update email error:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: error.message
-    });
   }
-}
+
+  async updateEmail(req: AuthRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Not authenticated'
+        });
+      }
+
+      const { newEmail, password } = req.body;
+      
+      if (!newEmail || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'New email and password are required'
+        });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId }
+      });
+
+      if (!user || !user.password) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials'
+        });
+      }
+
+      const isValid = await comparePassword(password, user.password);
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid password'
+        });
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: newEmail }
+      });
+
+      if (existingUser && existingUser.id !== req.user.userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email is already in use'
+        });
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: req.user.userId },
+        data: { email: newEmail }
+      });
+
+      const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, ...userWithoutSensitive } = updatedUser;
+
+      return res.json({
+        success: true,
+        message: 'Email updated successfully',
+        user: userWithoutSensitive
+      });
+    } catch (error: any) {
+      console.error('Update email error:', error.message);
+      return res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 
   async createProject(req: Request, res: Response): Promise<Response> {
     try {
