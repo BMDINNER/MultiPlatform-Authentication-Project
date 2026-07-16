@@ -27,6 +27,7 @@ const allowedOrigins = [
   'https://snippet-frontend-kyvg.onrender.com',
   'https://auth-service.onrender.com',
   'https://snippet-backend.onrender.com',
+  'https://snippet-backend-djhd.onrender.com',
   'https://hospital-backend.onrender.com',
   process.env.CLIENT_URL
 ].filter(Boolean);
