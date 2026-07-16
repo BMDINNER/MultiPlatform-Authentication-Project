@@ -226,30 +226,30 @@ export class AuthService {
   }
 
   async requestPasswordReset(email: string): Promise<void> {
-  const user = await prisma.user.findUnique({
-    where: { email }
-  });
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
 
-  if (!user) {
-    console.log(`Password reset requested for non-existent email: ${email}`);
-    return;
-  }
-
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  const resetTokenExpiry = new Date(Date.now() + 3600000);
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      resetToken,
-      resetTokenExpiry
+    if (!user) {
+      console.log(`Password reset requested for non-existent email: ${email}`);
+      return;
     }
-  });
 
-  // Use auth-service URL instead of client URL for better security
-  const resetLink = `http://localhost:3001/reset-password?token=${resetToken}`;
-  console.log(`Password reset link for ${email}: ${resetLink}`);
-}
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 3600000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetToken,
+        resetTokenExpiry
+      }
+    });
+
+    const baseUrl = process.env.AUTH_SERVICE_URL || process.env.BASE_URL || 'http://localhost:3001';
+    const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
+    console.log(`Password reset link for ${email}: ${resetLink}`);
+  }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const user = await prisma.user.findFirst({
