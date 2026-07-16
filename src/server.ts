@@ -24,6 +24,7 @@ const allowedOrigins = [
   'http://localhost:3001',
   'https://snippet-frontend.onrender.com',
   'https://hospital-frontend.onrender.com',
+  'https://snippet-frontend-kyvg.onrender.com',
   'https://auth-service.onrender.com',
   'https://snippet-backend.onrender.com',
   'https://hospital-backend.onrender.com',
