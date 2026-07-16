@@ -22,6 +22,11 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3005',
   'http://localhost:3001',
+  'https://snippet-frontend.onrender.com',
+  'https://hospital-frontend.onrender.com',
+  'https://auth-service.onrender.com',
+  'https://snippet-backend.onrender.com',
+  'https://hospital-backend.onrender.com',
   process.env.CLIENT_URL
 ].filter(Boolean);
 
@@ -46,22 +51,17 @@ app.use(passport.initialize());
 // Serve static pages from public/
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Forgot Password page with nonce
+// Forgot Password page
 app.get('/forgot-password', (req, res) => {
-  const nonce = crypto.randomBytes(16).toString('base64');
-  const html = fs.readFileSync(path.join(__dirname, '../public/forgot-password.html'), 'utf8');
-  const htmlWithNonce = html.replace(/<script>/g, `<script nonce="${nonce}">`);
-  res.setHeader('Content-Security-Policy', `default-src 'self'; script-src 'nonce-${nonce}'; style-src 'self' 'unsafe-inline';`);
-  res.send(htmlWithNonce);
+  res.removeHeader('Content-Security-Policy');
+  res.sendFile(path.join(__dirname, '../public', 'forgot-password.html'));
 });
 
-// Reset Password page with nonce
+// Reset Password page
 app.get('/reset-password', (req, res) => {
-  const nonce = crypto.randomBytes(16).toString('base64');
-  const html = fs.readFileSync(path.join(__dirname, '../public/reset-password.html'), 'utf8');
-  const htmlWithNonce = html.replace(/<script>/g, `<script nonce="${nonce}">`);
-  res.setHeader('Content-Security-Policy', `default-src 'self'; script-src 'nonce-${nonce}'; style-src 'self' 'unsafe-inline';`);
-  res.send(htmlWithNonce);
+  res.removeHeader('Content-Security-Policy');
+  const token = req.query.token || '';
+  res.sendFile(path.join(__dirname, '../public', 'reset-password.html'));
 });
 
 app.use('/auth', authRoutes);
