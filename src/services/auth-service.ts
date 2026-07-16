@@ -225,7 +225,7 @@ export class AuthService {
     return userWithoutSensitive;
   }
 
-  async requestPasswordReset(email: string): Promise<void> {
+  async requestPasswordReset(email: string, req?: any): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { email }
     });
@@ -246,7 +246,13 @@ export class AuthService {
       }
     });
 
-    const baseUrl = process.env.AUTH_SERVICE_URL || process.env.BASE_URL || 'http://localhost:3001';
+    let baseUrl = 'http://localhost:3001';
+    if (req) {
+      const protocol = req.protocol || 'http';
+      const host = req.get('host') || 'localhost:3001';
+      baseUrl = `${protocol}://${host}`;
+    }
+
     const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
     console.log(`Password reset link for ${email}: ${resetLink}`);
   }

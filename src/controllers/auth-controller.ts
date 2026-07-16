@@ -11,19 +11,30 @@ export class AuthController {
   async register(req: Request, res: Response): Promise<Response> {
     try {
       const apiKey = req.headers['x-api-key'] as string;
+      const projectId = req.body.projectId || req.headers['x-project-id'] as string;
+      
       console.log('=== AUTH CONTROLLER REGISTER ===');
       console.log('Email:', req.body.email);
-      console.log('ProjectId:', req.body.projectId);
-      console.log('API Key:', apiKey);
+      console.log('ProjectId from body:', req.body.projectId);
+      console.log('ProjectId from header:', req.headers['x-project-id']);
+      console.log('ProjectId used:', projectId);
+      console.log('API Key from header:', apiKey);
       
-      if (!req.body.projectId) {
+      if (!projectId) {
+        console.error('Project ID is missing from both body and headers');
         return res.status(400).json({
           success: false,
           message: 'Project ID is required'
         });
       }
       
-      const result = await authService.register(req.body, apiKey);
+      // Ensure projectId is in the body for the auth service
+      const requestBody = {
+        ...req.body,
+        projectId: projectId
+      };
+      
+      const result = await authService.register(requestBody, apiKey);
       return res.json(result);
     } catch (error: any) {
       console.error('Register error:', error.message);
@@ -37,19 +48,29 @@ export class AuthController {
   async login(req: Request, res: Response): Promise<Response> {
     try {
       const apiKey = req.headers['x-api-key'] as string;
+      const projectId = req.body.projectId || req.headers['x-project-id'] as string;
+      
       console.log('=== AUTH CONTROLLER LOGIN ===');
       console.log('Email:', req.body.email);
-      console.log('ProjectId:', req.body.projectId);
-      console.log('API Key:', apiKey);
+      console.log('ProjectId from body:', req.body.projectId);
+      console.log('ProjectId from header:', req.headers['x-project-id']);
+      console.log('ProjectId used:', projectId);
+      console.log('API Key from header:', apiKey);
       
-      if (!req.body.projectId) {
+      if (!projectId) {
+        console.error('Project ID is missing from both body and headers');
         return res.status(400).json({
           success: false,
           message: 'Project ID is required'
         });
       }
       
-      const result = await authService.login(req.body, apiKey);
+      const requestBody = {
+        ...req.body,
+        projectId: projectId
+      };
+      
+      const result = await authService.login(requestBody, apiKey);
       return res.json(result);
     } catch (error: any) {
       console.error('Login error:', error.message);
@@ -131,7 +152,7 @@ export class AuthController {
         });
       }
 
-      await authService.requestPasswordReset(email);
+      await authService.requestPasswordReset(email, req);
       
       return res.json({
         success: true,
