@@ -3,17 +3,11 @@ import { hashPassword, comparePassword } from '../utils/password.js';
 import { generateTokens, verifyRefreshToken } from '../utils/jwt.js';
 import { RegisterRequest, LoginRequest, AuthResponse, User, Project } from '../types/index.js';
 import { v4 as uuidv4 } from 'uuid';
-import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
 export class AuthService {
   async register(data: RegisterRequest, apiKey?: string): Promise<AuthResponse> {
-    console.log('=== AUTH SERVICE REGISTER ===');
-    console.log('Email:', data.email);
-    console.log('ProjectId:', data.projectId);
-    console.log('API Key:', apiKey);
-
     if (!data.projectId) {
       throw new Error('Project ID is required');
     }
@@ -86,11 +80,6 @@ export class AuthService {
   }
 
   async login(credentials: LoginRequest, apiKey?: string): Promise<AuthResponse> {
-    console.log('=== AUTH SERVICE LOGIN ===');
-    console.log('Email:', credentials.email);
-    console.log('ProjectId:', credentials.projectId);
-    console.log('API Key:', apiKey);
-
     if (!credentials.projectId) {
       throw new Error('Project ID is required');
     }
@@ -223,80 +212,6 @@ export class AuthService {
 
     const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, ...userWithoutSensitive } = user;
     return userWithoutSensitive;
-  }
-
-  async requestPasswordReset(email: string, req?: any): Promise<{ success: boolean; message: string }> {
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!user) {
-      console.log(`Password reset requested for non-existent email: ${email}`);
-      return {
-        success: true,
-        message: 'If an account exists with this email, you will receive a password reset link.'
-      };
-    }
-
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = new Date(Date.now() + 3600000);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        resetToken,
-        resetTokenExpiry
-      }
-    });
-
-    let baseUrl = 'http://localhost:3001';
-    if (req) {
-      const protocol = req.protocol || 'http';
-      const host = req.get('host') || 'localhost:3001';
-      baseUrl = `${protocol}://${host}`;
-    }
-
-    const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
-    console.log(`Password reset link for ${email}: ${resetLink}`);
-
-    return {
-      success: true,
-      message: 'If an account exists with this email, you will receive a password reset link.'
-    };
-  }
-
-  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    const user = await prisma.user.findFirst({
-      where: {
-        resetToken: token,
-        resetTokenExpiry: {
-          gt: new Date()
-        }
-      }
-    });
-
-    if (!user) {
-      return {
-        success: false,
-        message: 'Invalid or expired reset token'
-      };
-    }
-
-    const hashedPassword = await hashPassword(newPassword);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null
-      }
-    });
-
-    return {
-      success: true,
-      message: 'Password reset successfully'
-    };
   }
 
   async findOrCreateOAuthUser(profile: any, provider: string, projectId?: string): Promise<User> {

@@ -13,15 +13,7 @@ export class AuthController {
       const apiKey = req.headers['x-api-key'] as string;
       const projectId = req.body.projectId || req.headers['x-project-id'] as string;
       
-      console.log('=== AUTH CONTROLLER REGISTER ===');
-      console.log('Email:', req.body.email);
-      console.log('ProjectId from body:', req.body.projectId);
-      console.log('ProjectId from header:', req.headers['x-project-id']);
-      console.log('ProjectId used:', projectId);
-      console.log('API Key from header:', apiKey);
-      
       if (!projectId) {
-        console.error('Project ID is missing from both body and headers');
         return res.status(400).json({
           success: false,
           message: 'Project ID is required'
@@ -49,15 +41,7 @@ export class AuthController {
       const apiKey = req.headers['x-api-key'] as string;
       const projectId = req.body.projectId || req.headers['x-project-id'] as string;
       
-      console.log('=== AUTH CONTROLLER LOGIN ===');
-      console.log('Email:', req.body.email);
-      console.log('ProjectId from body:', req.body.projectId);
-      console.log('ProjectId from header:', req.headers['x-project-id']);
-      console.log('ProjectId used:', projectId);
-      console.log('API Key from header:', apiKey);
-      
       if (!projectId) {
-        console.error('Project ID is missing from both body and headers');
         return res.status(400).json({
           success: false,
           message: 'Project ID is required'
@@ -134,72 +118,6 @@ export class AuthController {
     } catch (error: any) {
       console.error('Verify error:', error.message);
       return res.status(401).json({
-        success: false,
-        message: error.message
-      });
-    }
-  }
-
-  async requestPasswordReset(req: Request, res: Response): Promise<Response> {
-    try {
-      const { email } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({
-          success: false,
-          message: 'Email is required'
-        });
-      }
-
-      const result = await authService.requestPasswordReset(email, req);
-      
-      return res.status(200).json({
-        success: result.success,
-        message: result.message
-      });
-    } catch (error: any) {
-      console.error('Password reset request error:', error.message);
-      return res.status(400).json({
-        success: false,
-        message: error.message
-      });
-    }
-  }
-
-  async resetPassword(req: Request, res: Response): Promise<Response> {
-    try {
-      const { token, newPassword } = req.body;
-      
-      if (!token || !newPassword) {
-        return res.status(400).json({
-          success: false,
-          message: 'Token and new password are required'
-        });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({
-          success: false,
-          message: 'Password must be at least 6 characters'
-        });
-      }
-
-      const result = await authService.resetPassword(token, newPassword);
-      
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          message: result.message
-        });
-      }
-      
-      return res.status(200).json({
-        success: true,
-        message: result.message
-      });
-    } catch (error: any) {
-      console.error('Reset password error:', error.message);
-      return res.status(400).json({
         success: false,
         message: error.message
       });
@@ -351,8 +269,6 @@ export class AuthController {
       }
 
       const project = await authService.createProject(name, description);
-      
-      console.log('Project created:', { id: project.id, name: project.name, apiKey: project.apiKey });
       
       return res.json({
         success: true,

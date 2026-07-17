@@ -20,17 +20,9 @@ const registerLimiter = rateLimit({
   message: 'Too many registration attempts, please try again later'
 });
 
-const passwordResetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 300,
-  message: 'Too many password reset attempts, please try again later'
-});
-
 router.post('/register', registerLimiter, asyncHandler(authController.register.bind(authController)));
 router.post('/login', loginLimiter, asyncHandler(authController.login.bind(authController)));
 router.post('/refresh', asyncHandler(authController.refreshToken.bind(authController)));
-router.post('/forgot-password', passwordResetLimiter, asyncHandler(authController.requestPasswordReset.bind(authController)));
-router.post('/reset-password', passwordResetLimiter, asyncHandler(authController.resetPassword.bind(authController)));
 
 router.post('/logout', authenticate, asyncHandler(authController.logout.bind(authController)));
 router.get('/verify', authenticate, asyncHandler(authController.verify.bind(authController)));
