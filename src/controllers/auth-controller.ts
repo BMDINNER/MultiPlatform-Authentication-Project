@@ -28,7 +28,6 @@ export class AuthController {
         });
       }
       
-      // Ensure projectId is in the body for the auth service
       const requestBody = {
         ...req.body,
         projectId: projectId
@@ -152,11 +151,11 @@ export class AuthController {
         });
       }
 
-      await authService.requestPasswordReset(email, req);
+      const result = await authService.requestPasswordReset(email, req);
       
-      return res.json({
-        success: true,
-        message: 'If an account exists with this email, you will receive a password reset link.'
+      return res.status(200).json({
+        success: result.success,
+        message: result.message
       });
     } catch (error: any) {
       console.error('Password reset request error:', error.message);
@@ -185,11 +184,18 @@ export class AuthController {
         });
       }
 
-      await authService.resetPassword(token, newPassword);
+      const result = await authService.resetPassword(token, newPassword);
       
-      return res.json({
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: result.message
+        });
+      }
+      
+      return res.status(200).json({
         success: true,
-        message: 'Password reset successfully'
+        message: result.message
       });
     } catch (error: any) {
       console.error('Reset password error:', error.message);

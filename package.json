@@ -5,10 +5,10 @@
   "description": "Multiple Platform Authentication Service",
   "main": "dist/server.js",
   "scripts": {
+    "dev": "tsx src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "start:prod": "node dist/server.js",
-    "dev": "nodemon src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
@@ -30,7 +30,7 @@
     "dotenv": "^17.3.1",
     "nodemon": "^3.1.13",
     "prisma": "^5.7.0",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.23.1",
     "typescript": "^5.9.3"
   },
   "dependencies": {

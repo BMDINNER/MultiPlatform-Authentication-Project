@@ -225,14 +225,17 @@ export class AuthService {
     return userWithoutSensitive;
   }
 
-  async requestPasswordReset(email: string, req?: any): Promise<void> {
+  async requestPasswordReset(email: string, req?: any): Promise<{ success: boolean; message: string }> {
     const user = await prisma.user.findUnique({
       where: { email }
     });
 
     if (!user) {
       console.log(`Password reset requested for non-existent email: ${email}`);
-      return;
+      return {
+        success: true,
+        message: 'If an account exists with this email, you will receive a password reset link.'
+      };
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -255,9 +258,14 @@ export class AuthService {
 
     const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
     console.log(`Password reset link for ${email}: ${resetLink}`);
+
+    return {
+      success: true,
+      message: 'If an account exists with this email, you will receive a password reset link.'
+    };
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
+  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     const user = await prisma.user.findFirst({
       where: {
         resetToken: token,
@@ -268,7 +276,10 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new Error('Invalid or expired reset token');
+      return {
+        success: false,
+        message: 'Invalid or expired reset token'
+      };
     }
 
     const hashedPassword = await hashPassword(newPassword);
@@ -281,6 +292,11 @@ export class AuthService {
         resetTokenExpiry: null
       }
     });
+
+    return {
+      success: true,
+      message: 'Password reset successfully'
+    };
   }
 
   async findOrCreateOAuthUser(profile: any, provider: string, projectId?: string): Promise<User> {
