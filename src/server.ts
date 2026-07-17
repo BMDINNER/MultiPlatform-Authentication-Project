@@ -30,7 +30,23 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrcElem: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'"],
+      imgSrc: ["'self'", "data:"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+  },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
   strictTransportSecurity: {
@@ -62,54 +78,16 @@ app.use(cors({
 app.use(express.json());
 app.use(passport.initialize());
 
+app.use(express.static(path.join(__dirname, '../public')));
+
 app.get('/forgot-password', (req, res) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.setHeader(
-    'Content-Security-Policy',
-    `default-src 'self'; ` +
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; ` +
-    `style-src-elem 'self' https://fonts.googleapis.com https://fonts.gstatic.com; ` +
-    `font-src 'self' https://fonts.gstatic.com data:; ` +
-    `img-src 'self' data: https:; ` +
-    `script-src 'self' 'unsafe-inline'; ` +
-    `connect-src 'self'; ` +
-    `frame-src 'self'; ` +
-    `frame-ancestors 'none'; ` +
-    `object-src 'none'; ` +
-    `base-uri 'self'; ` +
-    `form-action 'self'; ` +
-    `upgrade-insecure-requests`
-  );
   res.sendFile(path.join(__dirname, '../public', 'forgot-password.html'));
 });
 
 app.get('/reset-password', (req, res) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.setHeader(
-    'Content-Security-Policy',
-    `default-src 'self'; ` +
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; ` +
-    `style-src-elem 'self' https://fonts.googleapis.com https://fonts.gstatic.com; ` +
-    `font-src 'self' https://fonts.gstatic.com data:; ` +
-    `img-src 'self' data: https:; ` +
-    `script-src 'self' 'unsafe-inline'; ` +
-    `connect-src 'self'; ` +
-    `frame-src 'self'; ` +
-    `frame-ancestors 'none'; ` +
-    `object-src 'none'; ` +
-    `base-uri 'self'; ` +
-    `form-action 'self'; ` +
-    `upgrade-insecure-requests`
-  );
   const token = req.query.token || '';
   res.sendFile(path.join(__dirname, '../public', 'reset-password.html'));
 });
-
-app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/auth', authRoutes);
 app.use('/auth/oauth', oauthRoutes);
