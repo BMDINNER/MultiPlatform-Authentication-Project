@@ -65,9 +65,16 @@ export class AuthController {
         });
       }
       
+      if (error.message === 'Project ID is required') {
+        return res.status(400).json({
+          success: false,
+          message: 'Project ID is required'
+        });
+      }
+      
       return res.status(401).json({
         success: false,
-        message: error.message || 'Login failed'
+        message: 'Invalid email or password'
       });
     }
   }
