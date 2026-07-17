@@ -29,29 +29,24 @@ const allowedOrigins = [
   process.env.CLIENT_URL
 ].filter(Boolean);
 
-// Custom CSP middleware - applies only to API routes
-const setCSP = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // Skip CSP for static pages
-  if (req.path === '/forgot-password' || req.path === '/reset-password') {
-    return next();
-  }
-  
-  res.setHeader(
-    'Content-Security-Policy',
-    `default-src 'self'; ` +
-    `style-src 'self' 'unsafe-inline'; ` +
-    `script-src 'self' 'unsafe-inline'; ` +
-    `img-src 'self' data:; ` +
-    `connect-src 'self'; ` +
-    `font-src 'self'; ` +
-    `frame-ancestors 'none'; ` +
-    `object-src 'none'`
-  );
-  next();
-};
-
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      styleSrcElem: ["'self'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+  },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
   strictTransportSecurity: {
@@ -83,13 +78,8 @@ app.use(cors({
 app.use(express.json());
 app.use(passport.initialize());
 
-// Apply CSP middleware after helmet but before routes
-app.use(setCSP);
-
-// Serve static files from public folder
 app.use(express.static(path.join(__dirname, '../public')));
 
-// HTML pages - these won't have CSP headers
 app.get('/forgot-password', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'forgot-password.html'));
 });
