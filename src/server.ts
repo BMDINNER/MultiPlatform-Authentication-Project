@@ -30,27 +30,8 @@ const allowedOrigins = [
   process.env.CLIENT_URL
 ].filter(Boolean);
 
-const cspDirectives = {
-  defaultSrc: ["'self'"],
-  styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-  styleSrcElem: ["'self'", "https://fonts.googleapis.com"],
-  fontSrc: ["'self'", "https://fonts.gstatic.com"],
-  imgSrc: ["'self'", "data:", "https:"],
-  scriptSrc: ["'self'"],
-  scriptSrcAttr: ["'none'"],
-  connectSrc: ["'self'"],
-  frameSrc: ["'self'"],
-  frameAncestors: ["'none'"],
-  objectSrc: ["'none'"],
-  baseUri: ["'self'"],
-  formAction: ["'self'"],
-  upgradeInsecureRequests: [],
-};
-
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: cspDirectives,
-  },
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
   strictTransportSecurity: {
@@ -63,6 +44,32 @@ app.use(helmet({
   noSniff: true,
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
+
+app.use((req, res, next) => {
+  const isStaticPage = req.path === '/forgot-password' || req.path === '/reset-password';
+  
+  if (!isStaticPage) {
+    const nonce = crypto.randomBytes(16).toString('base64');
+    res.setHeader(
+      'Content-Security-Policy',
+      `default-src 'self'; ` +
+      `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ` +
+      `style-src-elem 'self' https://fonts.googleapis.com; ` +
+      `font-src 'self' https://fonts.gstatic.com; ` +
+      `img-src 'self' data: https:; ` +
+      `script-src 'self' 'nonce-${nonce}'; ` +
+      `connect-src 'self'; ` +
+      `frame-src 'self'; ` +
+      `frame-ancestors 'none'; ` +
+      `object-src 'none'; ` +
+      `base-uri 'self'; ` +
+      `form-action 'self'; ` +
+      `upgrade-insecure-requests`
+    );
+  }
+  
+  next();
+});
 
 app.use(cors({
   origin: function (origin, callback) {
