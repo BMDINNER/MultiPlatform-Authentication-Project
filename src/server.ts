@@ -30,24 +30,26 @@ const allowedOrigins = [
   process.env.CLIENT_URL
 ].filter(Boolean);
 
+const cspDirectives = {
+  defaultSrc: ["'self'"],
+  styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+  styleSrcElem: ["'self'", "https://fonts.googleapis.com"],
+  fontSrc: ["'self'", "https://fonts.gstatic.com"],
+  imgSrc: ["'self'", "data:", "https:"],
+  scriptSrc: ["'self'"],
+  scriptSrcAttr: ["'none'"],
+  connectSrc: ["'self'"],
+  frameSrc: ["'self'"],
+  frameAncestors: ["'none'"],
+  objectSrc: ["'none'"],
+  baseUri: ["'self'"],
+  formAction: ["'self'"],
+  upgradeInsecureRequests: [],
+};
+
 app.use(helmet({
   contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      styleSrcElem: ["'self'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
-      scriptSrcAttr: ["'none'"],
-      connectSrc: ["'self'"],
-      frameSrc: ["'self'"],
-      frameAncestors: ["'none'"],
-      objectSrc: ["'none'"],
-      baseUri: ["'self'"],
-      formAction: ["'self'"],
-      upgradeInsecureRequests: [],
-    },
+    directives: cspDirectives,
   },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
