@@ -9,15 +9,12 @@ import tokenRoutes from './routes/token-routes.js';
 import passport from './config/passport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 app.set('trust proxy', 1);
-
-app.use(helmet());
 
 const allowedOrigins = [
   'http://localhost:3000',
@@ -32,6 +29,31 @@ const allowedOrigins = [
   'https://hospital-backend.onrender.com',
   process.env.CLIENT_URL
 ].filter(Boolean);
+
+app.use((req, res, next) => {
+  const nonce = crypto.randomBytes(16).toString('base64');
+  (res as any).locals = { nonce };
+  
+  res.setHeader(
+    'Content-Security-Policy',
+    `default-src 'self'; ` +
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ` +
+    `style-src-elem 'self' https://fonts.googleapis.com; ` +
+    `font-src 'self' https://fonts.gstatic.com; ` +
+    `img-src 'self' data: https:; ` +
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-inline'; ` +
+    `connect-src 'self'; ` +
+    `frame-src 'self'; ` +
+    `object-src 'none'`
+  );
+  
+  next();
+});
+
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -51,16 +73,20 @@ app.use(cors({
 app.use(express.json());
 app.use(passport.initialize());
 
-// Serve static pages from public/
+app.use((req, res, next) => {
+  if (req.path === '/forgot-password' || req.path === '/reset-password') {
+    res.removeHeader('Content-Security-Policy');
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Forgot Password page
 app.get('/forgot-password', (req, res) => {
   res.removeHeader('Content-Security-Policy');
   res.sendFile(path.join(__dirname, '../public', 'forgot-password.html'));
 });
 
-// Reset Password page
 app.get('/reset-password', (req, res) => {
   res.removeHeader('Content-Security-Policy');
   const token = req.query.token || '';
