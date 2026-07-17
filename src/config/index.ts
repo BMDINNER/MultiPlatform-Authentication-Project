@@ -3,10 +3,6 @@ import type { SignOptions } from 'jsonwebtoken';
 
 dotenv.config();
 
-// Check if DATABASE_URL is loaded
-console.log('DATABASE_URL from env:', process.env.DATABASE_URL ? 'Set' : 'Missing');
-
-// Validate required critical secrets exist
 const requiredEnvVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'DATABASE_URL'];
 
 for (const envVar of requiredEnvVars) {
@@ -71,12 +67,3 @@ export const config: {
     callbackUrl: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:3001/auth/microsoft/callback'
   }
 };
-
-// Log configuration status
-console.log('Auth Service Configuration:');
-console.log(`JWT Secret: ${config.jwtSecret ? 'Set' : 'Missing'}`);
-console.log(`Database URL: ${config.databaseUrl ? 'Set' : 'Missing'}`);
-console.log(`Client URL: ${config.clientUrl}`);
-console.log(`Google OAuth: ${config.google.clientId ? 'Configured' : 'Not configured'}`);
-console.log(`GitHub OAuth: ${config.github.clientId ? 'Configured' : 'Not configured'}`);
-console.log(`Microsoft OAuth: ${config.microsoft.clientId ? 'Configured' : 'Not configured'}`);
