@@ -89,13 +89,13 @@ export class AuthService {
     });
 
     if (!user || !user.password) {
-      throw new Error('Invalid credentials');
+      throw new Error('Invalid email or password');
     }
 
     const isValid = await comparePassword(credentials.password, user.password);
 
     if (!isValid) {
-      throw new Error('Invalid credentials');
+      throw new Error('Invalid email or password');
     }
 
     const project = await prisma.project.findUnique({

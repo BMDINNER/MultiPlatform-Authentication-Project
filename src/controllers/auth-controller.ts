@@ -57,9 +57,17 @@ export class AuthController {
       return res.json(result);
     } catch (error: any) {
       console.error('Login error:', error.message);
+      
+      if (error.message === 'Invalid email or password') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid email or password'
+        });
+      }
+      
       return res.status(401).json({
         success: false,
-        message: error.message
+        message: error.message || 'Login failed'
       });
     }
   }
