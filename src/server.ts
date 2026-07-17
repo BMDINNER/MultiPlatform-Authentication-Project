@@ -533,6 +533,16 @@ app.use(helmet({
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
 
+
+app.get('/debug/headers', (req, res) => {
+  const headers = {
+    'Content-Security-Policy': res.getHeader('Content-Security-Policy'),
+    'X-Content-Security-Policy': res.getHeader('X-Content-Security-Policy'),
+    'X-WebKit-CSP': res.getHeader('X-WebKit-CSP'),
+  };
+  res.json(headers);
+});
+
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
