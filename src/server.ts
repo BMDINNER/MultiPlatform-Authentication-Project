@@ -30,29 +30,36 @@ const allowedOrigins = [
   process.env.CLIENT_URL
 ].filter(Boolean);
 
-app.use((req, res, next) => {
-  const nonce = crypto.randomBytes(16).toString('base64');
-  (res as any).locals = { nonce };
-  
-  res.setHeader(
-    'Content-Security-Policy',
-    `default-src 'self'; ` +
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ` +
-    `style-src-elem 'self' https://fonts.googleapis.com; ` +
-    `font-src 'self' https://fonts.gstatic.com; ` +
-    `img-src 'self' data: https:; ` +
-    `script-src 'self' 'nonce-${nonce}' 'unsafe-inline'; ` +
-    `connect-src 'self'; ` +
-    `frame-src 'self'; ` +
-    `object-src 'none'`
-  );
-  
-  next();
-});
-
 app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      styleSrcElem: ["'self'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      scriptSrcAttr: ["'none'"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+  },
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  strictTransportSecurity: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  xFrameOptions: { action: "deny" },
+  xssFilter: true,
+  noSniff: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
 
 app.use(cors({
@@ -73,22 +80,13 @@ app.use(cors({
 app.use(express.json());
 app.use(passport.initialize());
 
-app.use((req, res, next) => {
-  if (req.path === '/forgot-password' || req.path === '/reset-password') {
-    res.removeHeader('Content-Security-Policy');
-  }
-  next();
-});
-
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/forgot-password', (req, res) => {
-  res.removeHeader('Content-Security-Policy');
   res.sendFile(path.join(__dirname, '../public', 'forgot-password.html'));
 });
 
 app.get('/reset-password', (req, res) => {
-  res.removeHeader('Content-Security-Policy');
   const token = req.query.token || '';
   res.sendFile(path.join(__dirname, '../public', 'reset-password.html'));
 });
