@@ -82,6 +82,15 @@ app.use(cors({
 app.use(express.json());
 app.use(passport.initialize());
 
+app.use((req, res, next) => {
+  if (req.path === '/forgot-password' || req.path === '/reset-password') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/forgot-password', (req, res) => {
