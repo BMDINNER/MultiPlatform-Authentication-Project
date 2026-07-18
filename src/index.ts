@@ -7,7 +7,6 @@ const PORT = process.env.PORT || 3001;
 async function startServer() {
   try {
     await prisma.$connect();
-    console.log('Database connected');
 
     app.listen(PORT, () => {
       console.log(`Auth service running on port ${PORT}`);
