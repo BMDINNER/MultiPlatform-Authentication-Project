@@ -6,7 +6,10 @@ export interface User {
   provider: string;
   providerId?: string | null;
   refreshToken?: string | null;
+  role: string;
   profile?: any;
+  resetToken?: string | null;
+  resetTokenExpiry?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,7 +37,6 @@ export interface ProjectUser {
 export interface TokenPayload {
   userId: string;
   email: string;
-  projectId?: string;
   provider?: string;
 }
 
@@ -46,9 +48,8 @@ export interface RefreshTokenPayload {
 export interface AuthResponse {
   token: string;
   refreshToken: string;
-  user: Omit<User, 'password' | 'refreshToken' | 'resetToken' | 'resetTokenExpiry'>;
+  user: Omit<User, 'id' | 'password' | 'refreshToken' | 'resetToken' | 'resetTokenExpiry' | 'providerId' | 'role'>;
   project?: {
-    id: string;
     name: string;
     role: string;
   };

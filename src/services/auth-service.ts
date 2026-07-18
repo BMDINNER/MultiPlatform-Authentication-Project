@@ -56,8 +56,7 @@ export class AuthService {
 
     const { token, refreshToken } = generateTokens({
       userId: user.id,
-      email: user.email,
-      projectId: data.projectId
+      email: user.email
     });
 
     await prisma.user.update({
@@ -65,14 +64,13 @@ export class AuthService {
       data: { refreshToken }
     });
 
-    const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, ...userWithoutSensitive } = user;
+    const { id: _, password: __, refreshToken: ___, resetToken: ____, resetTokenExpiry: _____, providerId: ______, role: _______, ...userWithoutSensitive } = user;
 
     return {
       token,
       refreshToken,
       user: userWithoutSensitive,
       project: {
-        id: projectUser.project.id,
         name: projectUser.project.name,
         role: projectUser.role
       }
@@ -135,8 +133,7 @@ export class AuthService {
 
     const { token, refreshToken } = generateTokens({
       userId: user.id,
-      email: user.email,
-      projectId: credentials.projectId
+      email: user.email
     });
 
     await prisma.user.update({
@@ -144,14 +141,13 @@ export class AuthService {
       data: { refreshToken }
     });
 
-    const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, ...userWithoutSensitive } = user;
+    const { id: _, password: __, refreshToken: ___, resetToken: ____, resetTokenExpiry: _____, providerId: ______, role: _______, ...userWithoutSensitive } = user;
 
     return {
       token,
       refreshToken,
       user: userWithoutSensitive,
       project: {
-        id: projectUser.project.id,
         name: projectUser.project.name,
         role: projectUser.role
       }
@@ -188,7 +184,7 @@ export class AuthService {
     });
   }
 
-  async verifyToken(userId: string, projectId?: string): Promise<Omit<User, 'password' | 'refreshToken' | 'resetToken' | 'resetTokenExpiry'>> {
+  async verifyToken(userId: string, projectId?: string): Promise<Omit<User, 'id' | 'password' | 'refreshToken' | 'resetToken' | 'resetTokenExpiry' | 'providerId' | 'role'>> {
     const user = await prisma.user.findUnique({
       where: { id: userId }
     });
@@ -210,7 +206,7 @@ export class AuthService {
       }
     }
 
-    const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, ...userWithoutSensitive } = user;
+    const { id: _, password: __, refreshToken: ___, resetToken: ____, resetTokenExpiry: _____, providerId: ______, role: _______, ...userWithoutSensitive } = user;
     return userWithoutSensitive;
   }
 

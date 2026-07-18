@@ -127,11 +127,9 @@ export class AuthController {
       const projectId = req.headers['x-project-id'] as string;
       const user = await authService.verifyToken(req.user.userId, projectId);
       
-      const { id: _, ...userWithoutId } = user;
-      
       return res.json({
         success: true,
-        user: userWithoutId
+        user
       });
     } catch (error: any) {
       console.error('Verify error:', error.message);
@@ -259,7 +257,7 @@ export class AuthController {
         data: { email: newEmail }
       });
 
-      const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, ...userWithoutSensitive } = updatedUser;
+      const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, providerId: _____, role: ______, ...userWithoutSensitive } = updatedUser;
 
       return res.json({
         success: true,
