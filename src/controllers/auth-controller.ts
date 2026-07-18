@@ -126,9 +126,12 @@ export class AuthController {
       }
       const projectId = req.headers['x-project-id'] as string;
       const user = await authService.verifyToken(req.user.userId, projectId);
+      
+      const { id: _, ...userWithoutId } = user;
+      
       return res.json({
         success: true,
-        user
+        user: userWithoutId
       });
     } catch (error: any) {
       console.error('Verify error:', error.message);

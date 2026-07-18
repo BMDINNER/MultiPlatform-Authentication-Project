@@ -48,10 +48,8 @@ export const verifyAccessToken = async (req: Request, res: Response) => {
     res.json({
       valid: true,
       user: {
-        userId: payload.userId,
         email: payload.email,
         username: user.username || user.email.split('@')[0],
-        projectId: payload.projectId,
         provider: user.provider,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -214,10 +212,8 @@ export const validateSession = async (req: Request, res: Response) => {
     res.json({
       valid: true,
       user: {
-        userId: payload.userId,
         email: payload.email,
         username: user.username || user.email.split('@')[0],
-        projectId: payload.projectId,
         provider: user.provider,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
