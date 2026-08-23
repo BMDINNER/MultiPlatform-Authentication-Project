@@ -1,13 +1,7 @@
 import app from './server.js';
 import { PrismaClient } from '@prisma/client';
 
-export const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+export const prisma = new PrismaClient();
 
 const PORT = process.env.PORT || 3001;
 
