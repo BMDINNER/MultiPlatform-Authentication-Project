@@ -11,21 +11,27 @@ const adapter = new PrismaPg(pool);
 
 export const prisma = new PrismaClient();
 
-
-(async () => {
-  try {
-    await prisma.$connect();
-    console.log('Database connected successfully');
-  } catch (error) {
-    console.error('Failed to connect to database:', error);
-    process.exit(1);
-  }
-})();
+Object.defineProperty(prisma, '_adapter', {
+  value: adapter,
+  configurable: false,
+  enumerable: false,
+  writable: false,
+});
 
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
-  console.log(`Auth service running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await prisma.$connect();
+    console.log('Database connected successfully');
 
-export { adapter };
+    app.listen(PORT, () => {
+      console.log(`Auth service running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
