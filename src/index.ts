@@ -9,13 +9,9 @@ const pool = new Pool({
 
 const adapter = new PrismaPg(pool);
 
-export const prisma = new PrismaClient();
-
-Object.defineProperty(prisma, '_adapter', {
-  value: adapter,
-  configurable: false,
-  enumerable: false,
-  writable: false,
+export const prisma = new PrismaClient({
+  // @ts-ignore 
+  adapter,
 });
 
 const PORT = process.env.PORT || 3001;

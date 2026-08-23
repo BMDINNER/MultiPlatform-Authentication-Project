@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth-service.js';
 import { AuthRequest } from '../middleware/auth.js';
-import { PrismaClient } from '@prisma/client';
 import { comparePassword, hashPassword } from '../utils/password.js';
+import { prisma } from '../index.js';
 
-const prisma = new PrismaClient();
 const authService = new AuthService();
 
 export class AuthController {
