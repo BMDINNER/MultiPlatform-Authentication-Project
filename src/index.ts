@@ -5,39 +5,43 @@ import { Pool } from 'pg';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis: 10000,
 });
 
 const adapter = new PrismaPg(pool);
 
 export const prisma = new PrismaClient({
-  // @ts-ignore 
   adapter,
 });
 
 const PORT = process.env.PORT || 3001;
 
-async function startServer() {
-  let retries = 10;
-  let delay = 2000;
-
-  while (retries > 0) {
+const connectWithRetry = async (retries = 5, delay = 1500) => {
+  for (let i = 0; i < retries; i++) {
     try {
-      console.log(`Attempting database connection... (${retries} attempts left)`);
+      console.log(`Database connection attempt ${i + 1}/${retries}...`);
       await prisma.$connect();
-      console.log('Database connected successfully');
-      break;
+      console.log('Database connected successfully!');
+      return;
     } catch (error) {
-      retries--;
-      if (retries === 0) {
-        console.error('Failed to connect to database after all retries:', error);
-        process.exit(1);
-      }
-      console.log(`Database connection failed, retrying in ${delay}ms...`);
+      console.log(`Database connection failed (attempt ${i + 1})`);
+      if (i === retries - 1) throw error;
       await new Promise(resolve => setTimeout(resolve, delay));
-      delay *= 2;
     }
   }
-  console.log(`Auth service is ready on port ${PORT}`);
+};
+
+async function startServer() {
+  try {
+    await connectWithRetry();
+
+    app.listen(PORT, () => {
+      console.log(`Auth service running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 }
 
 startServer();
