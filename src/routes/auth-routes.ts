@@ -10,11 +10,15 @@ const authController = new AuthController();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50,
+  max: 100,
   message: 'Too many login attempts, please try again later',
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    if (req.path === '/health') return true;
+    return false;
+  }
 });
 
 const registerLimiter = rateLimit({
