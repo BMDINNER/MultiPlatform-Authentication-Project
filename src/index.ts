@@ -34,13 +34,10 @@ async function startServer() {
       }
       console.log(`Database connection failed, retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
-      delay *= 2; 
+      delay *= 2;
     }
   }
-
-  app.listen(PORT, () => {
-    console.log(`Auth service running on port ${PORT}`);
-  });
+  console.log(`Auth service is ready on port ${PORT}`);
 }
 
 startServer();
