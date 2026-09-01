@@ -10,7 +10,7 @@ const authController = new AuthController();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 50,
   message: 'Too many login attempts, please try again later',
   skipSuccessfulRequests: true,
   standardHeaders: true,
