@@ -15,6 +15,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.set('trust proxy', 1);
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3005',
