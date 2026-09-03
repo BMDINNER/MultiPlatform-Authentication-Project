@@ -2,33 +2,13 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/auth-controller.js';
 import { authenticate } from '../middleware/auth.js';
 import { validateProjectApiKey } from '../middleware/project-auth.js';
-import rateLimit from 'express-rate-limit';
 import { asyncHandler } from '../utils/async-handler.js';
 
 const router = Router();
 const authController = new AuthController();
 
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many login attempts, please try again later',
-  skipSuccessfulRequests: true,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    if (req.path === '/health') return true;
-    return false;
-  }
-});
-
-const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 200,
-  message: 'Too many registration attempts, please try again later'
-});
-
-router.post('/register', registerLimiter, asyncHandler(authController.register.bind(authController)));
-router.post('/login', loginLimiter, asyncHandler(authController.login.bind(authController)));
+router.post('/register', asyncHandler(authController.register.bind(authController)));
+router.post('/login', asyncHandler(authController.login.bind(authController)));
 router.post('/refresh', asyncHandler(authController.refreshToken.bind(authController)));
 
 router.post('/logout', authenticate, asyncHandler(authController.logout.bind(authController)));
