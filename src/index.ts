@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 export const prisma = new PrismaClient();
 
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -37,7 +37,7 @@ async function startServer() {
     process.exit(1);
   }
 
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Auth service running on port ${PORT}`);
     console.log(`Health check available at /health`);
     console.log(`Ping endpoint available at /ping`);
@@ -48,14 +48,12 @@ async function startServer() {
     
     server.close(async () => {
       console.log('HTTP server closed');
-      
       try {
         await prisma.$disconnect();
         console.log('Database disconnected');
       } catch (error) {
         console.error('Error disconnecting database:', error);
       }
-      
       console.log('Graceful shutdown complete');
       process.exit(0);
     });
