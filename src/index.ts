@@ -5,9 +5,13 @@ export const prisma = new PrismaClient();
 
 const PORT = process.env.PORT || 3001;
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function startServer() {
-  let retries = 5;
-  let delay = 2000;
+  let retries = 10;
+  let delay = 3000;
+
+  console.log('Starting auth service...');
 
   while (retries > 0) {
     try {
@@ -22,14 +26,28 @@ async function startServer() {
         process.exit(1);
       }
       console.log(`Database connection failed, retrying in ${delay}ms...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      delay *= 2;
+      await sleep(delay);
+      delay *= 1.5;
     }
   }
 
   app.listen(PORT, () => {
     console.log(`Auth service running on port ${PORT}`);
+    console.log(`Health check available at /health`);
+    console.log(`Ping endpoint available at /ping`);
   });
 }
+
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, closing database connection...');
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, closing database connection...');
+  await prisma.$disconnect();
+  process.exit(0);
+});
 
 startServer();

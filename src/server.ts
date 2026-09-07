@@ -8,7 +8,6 @@ import tokenRoutes from './routes/token-routes.js';
 import passport from './config/passport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { prisma } from './index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,15 +92,6 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
-});
-
-app.get('/ready', async (req, res) => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ status: 'ready' });
-  } catch (error) {
-    res.status(503).json({ status: 'not ready' });
-  }
 });
 
 app.get('/ping', (req, res) => {
