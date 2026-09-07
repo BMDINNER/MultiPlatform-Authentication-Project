@@ -1,5 +1,6 @@
 import app from './server.js';
 import { PrismaClient } from '@prisma/client';
+import { enableRateLimiting } from './routes/auth-routes.js';
 
 export const prisma = new PrismaClient();
 
@@ -42,6 +43,12 @@ async function startServer() {
     console.log(`Health check available at /health`);
     console.log(`Ping endpoint available at /ping`);
   });
+
+  console.log('Waiting for service to be fully ready...');
+  await sleep(5000);
+
+  enableRateLimiting();
+  console.log('Service is ready and rate limiting is active');
 
   const gracefulShutdown = async (signal: string) => {
     console.log(`${signal} received, starting graceful shutdown...`);

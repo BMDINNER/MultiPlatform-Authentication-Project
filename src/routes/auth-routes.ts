@@ -8,6 +8,8 @@ import { asyncHandler } from '../utils/async-handler.js';
 const router = Router();
 const authController = new AuthController();
 
+let isServiceReady = false;
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -16,8 +18,7 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    if (req.path === '/health') return true;
-    if (req.path === '/ping') return true;
+    if (!isServiceReady) return true;
     return false;
   }
 });
@@ -25,7 +26,11 @@ const loginLimiter = rateLimit({
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
-  message: 'Too many registration attempts, please try again later'
+  message: 'Too many registration attempts, please try again later',
+  skip: (req) => {
+    if (!isServiceReady) return true;
+    return false;
+  }
 });
 
 const generalLimiter = rateLimit({
@@ -33,13 +38,17 @@ const generalLimiter = rateLimit({
   max: 60,
   message: 'Too many requests, please slow down',
   skip: (req) => {
-    if (req.path === '/health') return true;
-    if (req.path === '/ping') return true;
+    if (!isServiceReady) return true;
     return false;
   }
 });
 
 router.use(generalLimiter);
+
+export const enableRateLimiting = () => {
+  isServiceReady = true;
+  console.log('Rate limiting enabled');
+};
 
 router.post('/register', registerLimiter, asyncHandler(authController.register.bind(authController)));
 router.post('/login', loginLimiter, asyncHandler(authController.login.bind(authController)));
