@@ -27,7 +27,7 @@ const allowedOrigins = [
   'https://snippet-frontend.onrender.com',
   'https://hospital-frontend.onrender.com',
   'https://snippet-frontend-ujc2.onrender.com',
-  'https://auth-service.onrender.com',
+  'https://auth-service-xo0o.onrender.com',
   'https://snippet-backend.onrender.com',
   'https://snippet-backend-9lt3.onrender.com',
   'https://hospital-backend.onrender.com',
