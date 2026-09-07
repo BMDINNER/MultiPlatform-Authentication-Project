@@ -7,47 +7,77 @@ const PORT = process.env.PORT || 3001;
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function startServer() {
-  let retries = 10;
-  let delay = 3000;
-
-  console.log('Starting auth service...');
-
-  while (retries > 0) {
+const connectDatabase = async (retries: number = 10, delay: number = 3000): Promise<boolean> => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      console.log(`Attempting database connection... (${retries} attempts left)`);
+      console.log(`Database connection attempt ${attempt}/${retries}...`);
       await prisma.$connect();
       console.log('Database connected successfully');
-      break;
-    } catch (error) {
-      retries--;
-      if (retries === 0) {
-        console.error('Failed to connect to database after all retries:', error);
-        process.exit(1);
+      return true;
+    } catch (error: any) {
+      console.error(`Database connection failed (attempt ${attempt}):`, error.message);
+      if (attempt === retries) {
+        console.error('All database connection attempts failed');
+        return false;
       }
-      console.log(`Database connection failed, retrying in ${delay}ms...`);
+      console.log(`Retrying in ${delay}ms...`);
       await sleep(delay);
       delay *= 1.5;
     }
   }
+  return false;
+};
 
-  app.listen(PORT, () => {
+async function startServer() {
+  console.log('Starting auth service...');
+
+  const dbConnected = await connectDatabase();
+  if (!dbConnected) {
+    console.error('Failed to connect to database on startup');
+    process.exit(1);
+  }
+
+  const server = app.listen(PORT, () => {
     console.log(`Auth service running on port ${PORT}`);
     console.log(`Health check available at /health`);
     console.log(`Ping endpoint available at /ping`);
   });
+
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`${signal} received, starting graceful shutdown...`);
+    
+    server.close(async () => {
+      console.log('HTTP server closed');
+      
+      try {
+        await prisma.$disconnect();
+        console.log('Database disconnected');
+      } catch (error) {
+        console.error('Error disconnecting database:', error);
+      }
+      
+      console.log('Graceful shutdown complete');
+      process.exit(0);
+    });
+
+    setTimeout(() => {
+      console.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  process.on('uncaughtException', async (error) => {
+    console.error('Uncaught exception:', error);
+    await gracefulShutdown('uncaughtException');
+  });
+
+  process.on('unhandledRejection', async (reason) => {
+    console.error('Unhandled rejection:', reason);
+    await gracefulShutdown('unhandledRejection');
+  });
 }
-
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, closing database connection...');
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  console.log('SIGINT received, closing database connection...');
-  await prisma.$disconnect();
-  process.exit(0);
-});
 
 startServer();

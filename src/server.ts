@@ -8,6 +8,7 @@ import tokenRoutes from './routes/token-routes.js';
 import passport from './config/passport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { prisma } from './index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,22 +91,65 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/ping', (req, res) => {
-  res.json({ 
-    pong: true, 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+app.get('/ping', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ 
+      pong: true, 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: 'connected'
+    });
+  } catch (error) {
+    try {
+      console.log('[Ping] Database disconnected, attempting to reconnect...');
+      await prisma.$connect();
+      res.json({ 
+        pong: true, 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        database: 'reconnected'
+      });
+    } catch (reconnectError) {
+      console.error('[Ping] Failed to reconnect database:', reconnectError);
+      res.status(503).json({ 
+        pong: false, 
+        error: 'Database connection failed',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
 });
 
-app.post('/ping', (req, res) => {
-  res.json({ 
-    pong: true, 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+app.post('/ping', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ 
+      pong: true, 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: 'connected'
+    });
+  } catch (error) {
+    try {
+      console.log('[Ping] Database disconnected, attempting to reconnect...');
+      await prisma.$connect();
+      res.json({ 
+        pong: true, 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        database: 'reconnected'
+      });
+    } catch (reconnectError) {
+      console.error('[Ping] Failed to reconnect database:', reconnectError);
+      res.status(503).json({ 
+        pong: false, 
+        error: 'Database connection failed',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
 });
-
 
 app.use('/auth', authRoutes);
 app.use('/auth/oauth', oauthRoutes);
