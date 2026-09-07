@@ -82,10 +82,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(passport.initialize());
 
-app.use('/auth', authRoutes);
-app.use('/auth/oauth', oauthRoutes);
-app.use('/auth/token', tokenRoutes);
-
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
@@ -109,6 +105,11 @@ app.post('/ping', (req, res) => {
     uptime: process.uptime()
   });
 });
+
+
+app.use('/auth', authRoutes);
+app.use('/auth/oauth', oauthRoutes);
+app.use('/auth/token', tokenRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);

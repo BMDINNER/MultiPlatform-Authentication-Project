@@ -17,6 +17,7 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
   skip: (req) => {
     if (req.path === '/health') return true;
+    if (req.path === '/ping') return true;
     return false;
   }
 });
@@ -33,6 +34,7 @@ const generalLimiter = rateLimit({
   message: 'Too many requests, please slow down',
   skip: (req) => {
     if (req.path === '/health') return true;
+    if (req.path === '/ping') return true;
     return false;
   }
 });
