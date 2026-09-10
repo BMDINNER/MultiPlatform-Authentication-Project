@@ -26,12 +26,9 @@ const allowedOrigins = [
   'http://localhost:3005',
   'http://localhost:3001',
   'https://snippet-frontend.onrender.com',
-  'https://hospital-frontend.onrender.com',
-  'https://snippet-frontend-ujc2.onrender.com',
-  'https://auth-service-xo0o.onrender.com',
+  'https://snippet-frontend-ujc2.onrender.com',,
   'https://snippet-backend.onrender.com',
   'https://snippet-backend-9lt3.onrender.com',
-  'https://hospital-backend.onrender.com',
   process.env.CLIENT_URL
 ].filter(Boolean);
 
