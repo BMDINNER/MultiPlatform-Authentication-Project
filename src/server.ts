@@ -1,17 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { config } from './config/index.js';
 import authRoutes from './routes/auth-routes.js';
 import oauthRoutes from './routes/oauth-routes.js';
 import tokenRoutes from './routes/token-routes.js';
 import passport from './config/passport.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { prisma } from './index.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { prisma } from './config/prisma.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -114,7 +108,8 @@ app.get('/ping', async (req, res) => {
       uptime: process.uptime(),
       database: 'connected'
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[Ping] Initial query failed:', error?.message || error);
     try {
       await prisma.$connect();
       res.json({
@@ -123,7 +118,7 @@ app.get('/ping', async (req, res) => {
         uptime: process.uptime(),
         database: 'reconnected'
       });
-    } catch (reconnectError) {
+    } catch (reconnectError: any) {
       console.error('[Ping] Failed to reconnect database:', reconnectError);
       res.status(503).json({
         pong: false,
@@ -143,7 +138,8 @@ app.post('/ping', async (req, res) => {
       uptime: process.uptime(),
       database: 'connected'
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[Ping] Initial query failed:', error?.message || error);
     try {
       await prisma.$connect();
       res.json({
@@ -152,7 +148,7 @@ app.post('/ping', async (req, res) => {
         uptime: process.uptime(),
         database: 'reconnected'
       });
-    } catch (reconnectError) {
+    } catch (reconnectError: any) {
       console.error('[Ping] Failed to reconnect database:', reconnectError);
       res.status(503).json({
         pong: false,

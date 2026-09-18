@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../index.js';
+import { prisma } from '../config/prisma.js';
 
 export const validateProjectApiKey = async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
   const projectId = req.body.projectId || req.query.projectId;

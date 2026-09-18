@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { verifyToken, isTokenBlacklisted, blacklistToken, blacklistUserTokens } from '../utils/jwt.js';
-import { prisma } from '../index.js';
+import { prisma } from '../config/prisma.js';
 
 export const verifyAccessToken = async (req: Request, res: Response) => {
   try {

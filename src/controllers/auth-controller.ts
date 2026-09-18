@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/auth-service.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { comparePassword, hashPassword } from '../utils/password.js';
-import { prisma } from '../index.js';
+import { prisma } from '../config/prisma.js';
 
 const authService = new AuthService();
 
