@@ -21,68 +21,85 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedOrigins = [
+const staticAllowedOrigins = [
   'http://localhost:3000',
-  'http://localhost:3005',
   'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:3005',
   'https://snippet-frontend.onrender.com',
-  'https://snippet-frontend-ujc2.onrender.com',,
+  'https://snippet-frontend-ujc2.onrender.com',
   'https://snippet-backend.onrender.com',
-  'https://snippet-backend-9lt3.onrender.com',
-  process.env.CLIENT_URL
-].filter(Boolean);
+  'https://snippet-backend-9lt3.onrender.com'
+];
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      styleSrcElem: ["'self'", "'unsafe-inline'"],
-      fontSrc: ["'self'"],
-      imgSrc: ["'self'", "data:"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'"],
-      frameSrc: ["'self'"],
-      frameAncestors: ["'none'"],
-      objectSrc: ["'none'"],
-      baseUri: ["'self'"],
-      formAction: ["'self'"],
-      upgradeInsecureRequests: [],
+const extraAllowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const allowedOrigins = [...staticAllowedOrigins, ...extraAllowedOrigins];
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        styleSrcElem: ["'self'", "'unsafe-inline'"],
+        fontSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:'],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        connectSrc: ["'self'"],
+        frameSrc: ["'self'"],
+        frameAncestors: ["'none'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        upgradeInsecureRequests: []
+      }
     },
-  },
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  strictTransportSecurity: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-  },
-  xFrameOptions: { action: "deny" },
-  xssFilter: true,
-  noSniff: true,
-  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
-}));
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    strictTransportSecurity: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
+    xFrameOptions: { action: 'deny' },
+    xssFilter: true,
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+  })
+);
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'x-api-key', 'x-project-id']
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'x-api-key',
+      'x-project-id'
+    ]
+  })
+);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(passport.initialize());
 
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -91,26 +108,25 @@ app.get('/health', (req, res) => {
 app.get('/ping', async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    res.json({ 
-      pong: true, 
+    res.json({
+      pong: true,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       database: 'connected'
     });
   } catch (error) {
     try {
-      console.log('[Ping] Database disconnected, attempting to reconnect...');
       await prisma.$connect();
-      res.json({ 
-        pong: true, 
+      res.json({
+        pong: true,
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         database: 'reconnected'
       });
     } catch (reconnectError) {
       console.error('[Ping] Failed to reconnect database:', reconnectError);
-      res.status(503).json({ 
-        pong: false, 
+      res.status(503).json({
+        pong: false,
         error: 'Database connection failed',
         timestamp: new Date().toISOString()
       });
@@ -121,26 +137,25 @@ app.get('/ping', async (req, res) => {
 app.post('/ping', async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    res.json({ 
-      pong: true, 
+    res.json({
+      pong: true,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       database: 'connected'
     });
   } catch (error) {
     try {
-      console.log('[Ping] Database disconnected, attempting to reconnect...');
       await prisma.$connect();
-      res.json({ 
-        pong: true, 
+      res.json({
+        pong: true,
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         database: 'reconnected'
       });
     } catch (reconnectError) {
       console.error('[Ping] Failed to reconnect database:', reconnectError);
-      res.status(503).json({ 
-        pong: false, 
+      res.status(503).json({
+        pong: false,
         error: 'Database connection failed',
         timestamp: new Date().toISOString()
       });
@@ -152,9 +167,16 @@ app.use('/auth', authRoutes);
 app.use('/auth/oauth', oauthRoutes);
 app.use('/auth/token', tokenRoutes);
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Something went wrong!' });
+  }
+);
 
 export default app;

@@ -10,22 +10,29 @@ export class AuthController {
   async register(req: Request, res: Response): Promise<Response> {
     try {
       const apiKey = req.headers['x-api-key'] as string;
-      const projectId = req.body.projectId || req.headers['x-project-id'] as string;
-      
+      const projectId = req.body.projectId || (req.headers['x-project-id'] as string);
+
       if (!projectId) {
         return res.status(400).json({
           success: false,
           message: 'Project ID is required'
         });
       }
-      
+
       const requestBody = {
         ...req.body,
-        projectId: projectId
+        projectId
       };
-      
+
       const result = await authService.register(requestBody, apiKey);
-      return res.json(result);
+
+      return res.json({
+        success: true,
+        token: result.token,
+        refreshToken: result.refreshToken,
+        user: result.user,
+        project: result.project
+      });
     } catch (error: any) {
       console.error('Register error:', error.message);
       return res.status(400).json({
@@ -38,39 +45,46 @@ export class AuthController {
   async login(req: Request, res: Response): Promise<Response> {
     try {
       const apiKey = req.headers['x-api-key'] as string;
-      const projectId = req.body.projectId || req.headers['x-project-id'] as string;
-      
+      const projectId = req.body.projectId || (req.headers['x-project-id'] as string);
+
       if (!projectId) {
         return res.status(400).json({
           success: false,
           message: 'Project ID is required'
         });
       }
-      
+
       const requestBody = {
         ...req.body,
-        projectId: projectId
+        projectId
       };
-      
+
       const result = await authService.login(requestBody, apiKey);
-      return res.json(result);
+
+      return res.json({
+        success: true,
+        token: result.token,
+        refreshToken: result.refreshToken,
+        user: result.user,
+        project: result.project
+      });
     } catch (error: any) {
       console.error('Login error:', error.message);
-      
+
       if (error.message === 'Invalid email or password') {
         return res.status(401).json({
           success: false,
           message: 'Invalid email or password'
         });
       }
-      
+
       if (error.message === 'Project ID is required') {
         return res.status(400).json({
           success: false,
           message: 'Project ID is required'
         });
       }
-      
+
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -81,8 +95,20 @@ export class AuthController {
   async refreshToken(req: Request, res: Response): Promise<Response> {
     try {
       const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        return res.status(401).json({
+          success: false,
+          message: 'No refresh token provided'
+        });
+      }
+
       const result = await authService.refreshToken(refreshToken);
-      return res.json(result);
+
+      return res.json({
+        success: true,
+        token: result.token
+      });
     } catch (error: any) {
       console.error('Refresh token error:', error.message);
       return res.status(401).json({
@@ -94,14 +120,12 @@ export class AuthController {
 
   async logout(req: AuthRequest, res: Response): Promise<Response> {
     try {
-      const refreshToken = req.body.refreshToken;
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Not authenticated'
-        });
+      const { refreshToken } = req.body;
+
+      if (req.user) {
+        await authService.logout(req.user.userId, refreshToken);
       }
-      await authService.logout(req.user.userId, refreshToken);
+
       return res.json({
         success: true,
         message: 'Logged out successfully'
@@ -123,9 +147,10 @@ export class AuthController {
           message: 'Not authenticated'
         });
       }
+
       const projectId = req.headers['x-project-id'] as string;
       const user = await authService.verifyToken(req.user.userId, projectId);
-      
+
       return res.json({
         success: true,
         user
@@ -149,7 +174,7 @@ export class AuthController {
       }
 
       const { currentPassword, newPassword } = req.body;
-      
+
       if (!currentPassword || !newPassword) {
         return res.status(400).json({
           success: false,
@@ -213,7 +238,7 @@ export class AuthController {
       }
 
       const { newEmail, password } = req.body;
-      
+
       if (!newEmail || !password) {
         return res.status(400).json({
           success: false,
@@ -256,7 +281,15 @@ export class AuthController {
         data: { email: newEmail }
       });
 
-      const { password: _, refreshToken: __, resetToken: ___, resetTokenExpiry: ____, providerId: _____, role: ______, ...userWithoutSensitive } = updatedUser;
+      const {
+        password: _,
+        refreshToken: __,
+        resetToken: ___,
+        resetTokenExpiry: ____,
+        providerId: _____,
+        role: ______,
+        ...userWithoutSensitive
+      } = updatedUser;
 
       return res.json({
         success: true,
@@ -275,7 +308,7 @@ export class AuthController {
   async createProject(req: Request, res: Response): Promise<Response> {
     try {
       const { name, description } = req.body;
-      
+
       if (!name) {
         return res.status(400).json({
           success: false,
@@ -284,7 +317,7 @@ export class AuthController {
       }
 
       const project = await authService.createProject(name, description);
-      
+
       return res.json({
         success: true,
         data: {

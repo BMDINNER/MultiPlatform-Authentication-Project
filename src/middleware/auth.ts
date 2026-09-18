@@ -11,19 +11,19 @@ export interface AuthRequest extends Request {
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader) {
     return res.status(401).json({ message: 'No token provided' });
   }
 
   const parts = authHeader.split(' ');
-  
+
   if (parts.length !== 2) {
     return res.status(401).json({ message: 'Token error' });
   }
 
   const [scheme, token] = parts;
-  
+
   if (!/^Bearer$/i.test(scheme)) {
     return res.status(401).json({ message: 'Token malformatted' });
   }
@@ -39,19 +39,19 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
 export const optionalAuth = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader) {
     return next();
   }
 
   const parts = authHeader.split(' ');
-  
+
   if (parts.length !== 2) {
     return next();
   }
 
   const [scheme, token] = parts;
-  
+
   if (!/^Bearer$/i.test(scheme)) {
     return next();
   }
@@ -60,7 +60,7 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction) =>
     const payload = verifyToken(token);
     (req as AuthRequest).user = payload;
   } catch (err) {
-    // Ignore error, optional authentication so we dont block the request if the token is invalid
+    // Ignore invalid token for optional auth
   } finally {
     return next();
   }

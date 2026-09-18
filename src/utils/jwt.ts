@@ -2,22 +2,19 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
 import { TokenPayload, RefreshTokenPayload } from '../types/index.js';
 
-export const generateTokens = (payload: Omit<TokenPayload, 'projectId'>) => {
+export const generateTokens = (payload: { userId: string; email: string }) => {
   const token = jwt.sign(
-    { 
-      userId: payload.userId, 
-      email: payload.email 
-    },
-    config.jwtSecret, 
+    { userId: payload.userId, email: payload.email },
+    config.jwtSecret,
     { expiresIn: config.jwtExpiresIn }
   );
-  
+
   const refreshToken = jwt.sign(
     { userId: payload.userId, tokenId: generateTokenId() },
     config.jwtRefreshSecret,
     { expiresIn: config.jwtRefreshExpiresIn }
   );
-  
+
   return { token, refreshToken };
 };
 
@@ -30,8 +27,10 @@ export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
 };
 
 const generateTokenId = (): string => {
-  return Math.random().toString(36).substring(2, 15) + 
-  Math.random().toString(36).substring(2, 15);
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  );
 };
 
 export const blacklistToken = async (token: string): Promise<void> => {
@@ -41,17 +40,17 @@ export const blacklistToken = async (token: string): Promise<void> => {
       throw new Error('Invalid token');
     }
 
-    const expiresIn = (decoded.exp * 1000) - Date.now();
-    
+    const expiresIn = decoded.exp * 1000 - Date.now();
+
     if (expiresIn > 0) {
-      const tokenBlacklist = global.tokenBlacklist || new Map();
+      const tokenBlacklist = (global as any).tokenBlacklist || new Map();
       tokenBlacklist.set(token, true);
-      
+
       setTimeout(() => {
         tokenBlacklist.delete(token);
       }, expiresIn);
-      
-      global.tokenBlacklist = tokenBlacklist;
+
+      (global as any).tokenBlacklist = tokenBlacklist;
     }
   } catch (error) {
     console.error('Failed to blacklist token:', error);
@@ -59,13 +58,13 @@ export const blacklistToken = async (token: string): Promise<void> => {
 };
 
 export const isTokenBlacklisted = (token: string): boolean => {
-  const tokenBlacklist = global.tokenBlacklist || new Map();
+  const tokenBlacklist = (global as any).tokenBlacklist || new Map();
   return tokenBlacklist.has(token);
 };
 
 export const blacklistUserTokens = async (userId: string): Promise<void> => {
-  const userBlacklist = global.userTokenBlacklist || new Map();
+  const userBlacklist = (global as any).userTokenBlacklist || new Map();
   const newTokenId = generateTokenId();
   userBlacklist.set(userId, newTokenId);
-  global.userTokenBlacklist = userBlacklist;
+  (global as any).userTokenBlacklist = userBlacklist;
 };
