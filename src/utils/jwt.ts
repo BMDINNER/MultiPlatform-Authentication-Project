@@ -2,9 +2,17 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
 import { TokenPayload, RefreshTokenPayload } from '../types/index.js';
 
-export const generateTokens = (payload: { userId: string; email: string }) => {
+export const generateTokens = (payload: {
+  userId: string;
+  email: string;
+  provider?: string;
+}) => {
   const token = jwt.sign(
-    { userId: payload.userId, email: payload.email },
+    {
+      userId: payload.userId,
+      email: payload.email,
+      ...(payload.provider ? { provider: payload.provider } : {})
+    },
     config.jwtSecret,
     { expiresIn: config.jwtExpiresIn }
   );

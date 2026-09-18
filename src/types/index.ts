@@ -48,7 +48,16 @@ export interface RefreshTokenPayload {
 export interface AuthResponse {
   token: string;
   refreshToken: string;
-  user: Omit<User, 'id' | 'password' | 'refreshToken' | 'resetToken' | 'resetTokenExpiry' | 'providerId' | 'role'>;
+  user: Omit<
+    User,
+    | 'id'
+    | 'password'
+    | 'refreshToken'
+    | 'resetToken'
+    | 'resetTokenExpiry'
+    | 'providerId'
+    | 'role'
+  >;
   project?: {
     name: string;
     role: string;
