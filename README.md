@@ -270,8 +270,6 @@ MIT
 
 # auth-service
 
-English | **Türkçe**
-
 [English](#english) | **Türkçe**
 
 Express uygulamaları için merkezi bir kimlik doğrulama mikroservisi.
