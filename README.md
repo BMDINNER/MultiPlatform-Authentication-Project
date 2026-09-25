@@ -1,4 +1,4 @@
-# auth-service
+# Central Authentication Service
 
 <a id="english"></a>
 
@@ -268,7 +268,7 @@ MIT
 ---
 <a id="turkish"></a>
 
-# auth-service
+# Merkezi Tanımlama Servisi
 
 [English](#english) | **Türkçe**
 
