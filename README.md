@@ -1,6 +1,8 @@
 # auth-service
 
-**English** | [Türkçe](#türkçe)
+<a id="english"></a>
+
+**English** | [Türkçe](#turkish)
 
 A centralized authentication microservice for Express applications.
 
@@ -264,10 +266,13 @@ The service container runs `prisma migrate deploy` on startup, so migrations are
 MIT
 
 ---
+<a id="turkish"></a>
 
 # auth-service
 
 English | **Türkçe**
+
+[English](#english) | **Türkçe**
 
 Express uygulamaları için merkezi bir kimlik doğrulama mikroservisi.
 
