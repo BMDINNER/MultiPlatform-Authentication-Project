@@ -13,7 +13,7 @@ A centralized authentication microservice for Express applications.
 ## Flowchart of the project
 
 <p align="center">
-  <img src="auth-service-eng.png" alt="Flowchart" width="600" />
+  <img src="auth-service-eng.png" alt="Flowchart" width="800" />
   <br />
   <em>Request flow: frontend → backend → auth service → database.</em>
 </p>
@@ -281,7 +281,7 @@ Express uygulamaları için merkezi bir kimlik doğrulama mikroservisi.
 ## Projenin Akış Diyagramı
 
 <p align="center">
-  <img src="auth-service-tr.png" alt="Akış Diyagramı" width="600" />
+  <img src="auth-service-tr.png" alt="Akış Diyagramı" width="800" />
   <br />
   <em>İstek akışı: frontend → backend → auth service → veritabanı.</em>
 </p>
