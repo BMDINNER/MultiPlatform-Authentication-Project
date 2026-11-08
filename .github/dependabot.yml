@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Backend klasörünü tarar
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+
+  # Frontend klasörünü tarar
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
