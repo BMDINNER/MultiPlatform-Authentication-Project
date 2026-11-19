@@ -1,0 +1,68 @@
+import { Router } from 'express';
+import { AuthController } from '../controllers/auth-controller.js';
+import { authenticate } from '../middleware/auth.js';
+import { validateProjectApiKey } from '../middleware/project-auth.js';
+import rateLimit from 'express-rate-limit';
+import { asyncHandler } from '../utils/async-handler.js';
+
+const router = Router();
+const authController = new AuthController();
+
+let isServiceReady = false;
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many login attempts, please try again later',
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    if (!isServiceReady) return true;
+    return false;
+  }
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: 'Too many registration attempts, please try again later',
+  skip: (req) => {
+    if (!isServiceReady) return true;
+    return false;
+  }
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: 'Too many requests, please slow down',
+  skip: (req) => {
+    if (!isServiceReady) return true;
+    return false;
+  }
+});
+
+router.use(generalLimiter);
+
+export const enableRateLimiting = () => {
+  isServiceReady = true;
+  console.log('Rate limiting enabled');
+};
+
+router.post('/register', registerLimiter, asyncHandler(authController.register.bind(authController)));
+router.post('/login', loginLimiter, asyncHandler(authController.login.bind(authController)));
+router.post('/refresh', asyncHandler(authController.refreshToken.bind(authController)));
+
+router.post('/logout', authenticate, asyncHandler(authController.logout.bind(authController)));
+router.get('/verify', authenticate, asyncHandler(authController.verify.bind(authController)));
+
+router.put('/email', authenticate, asyncHandler(authController.updateEmail.bind(authController)));
+router.put('/change-password', authenticate, asyncHandler(authController.changePassword.bind(authController)));
+
+router.post('/projects', authenticate, asyncHandler(authController.createProject.bind(authController)));
+
+router.post('/project/register', validateProjectApiKey, asyncHandler(authController.register.bind(authController)));
+router.post('/project/login', validateProjectApiKey, asyncHandler(authController.login.bind(authController)));
+
+export default router;

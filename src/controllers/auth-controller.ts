@@ -1,0 +1,338 @@
+import { Request, Response } from 'express';
+import { AuthService } from '../services/auth-service.js';
+import { AuthRequest } from '../middleware/auth.js';
+import { comparePassword, hashPassword } from '../utils/password.js';
+import { prisma } from '../config/prisma.js';
+
+const authService = new AuthService();
+
+export class AuthController {
+  async register(req: Request, res: Response): Promise<Response> {
+    try {
+      const apiKey = req.headers['x-api-key'] as string;
+      const projectId = req.body.projectId || (req.headers['x-project-id'] as string);
+
+      if (!projectId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Project ID is required'
+        });
+      }
+
+      const requestBody = {
+        ...req.body,
+        projectId
+      };
+
+      const result = await authService.register(requestBody, apiKey);
+
+      return res.json({
+        success: true,
+        token: result.token,
+        refreshToken: result.refreshToken,
+        user: result.user,
+        project: result.project
+      });
+    } catch (error: any) {
+      console.error('Register error:', error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async login(req: Request, res: Response): Promise<Response> {
+    try {
+      const apiKey = req.headers['x-api-key'] as string;
+      const projectId = req.body.projectId || (req.headers['x-project-id'] as string);
+
+      if (!projectId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Project ID is required'
+        });
+      }
+
+      const requestBody = {
+        ...req.body,
+        projectId
+      };
+
+      const result = await authService.login(requestBody, apiKey);
+
+      return res.json({
+        success: true,
+        token: result.token,
+        refreshToken: result.refreshToken,
+        user: result.user,
+        project: result.project
+      });
+    } catch (error: any) {
+      console.error('Login error:', error.message);
+
+      if (error.message === 'Invalid email or password') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid email or password'
+        });
+      }
+
+      if (error.message === 'Project ID is required') {
+        return res.status(400).json({
+          success: false,
+          message: 'Project ID is required'
+        });
+      }
+
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+  }
+
+  async refreshToken(req: Request, res: Response): Promise<Response> {
+    try {
+      const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        return res.status(401).json({
+          success: false,
+          message: 'No refresh token provided'
+        });
+      }
+
+      const result = await authService.refreshToken(refreshToken);
+
+      return res.json({
+        success: true,
+        token: result.token
+      });
+    } catch (error: any) {
+      console.error('Refresh token error:', error.message);
+      return res.status(401).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async logout(req: AuthRequest, res: Response): Promise<Response> {
+    try {
+      const { refreshToken } = req.body;
+
+      if (req.user) {
+        await authService.logout(req.user.userId, refreshToken);
+      }
+
+      return res.json({
+        success: true,
+        message: 'Logged out successfully'
+      });
+    } catch (error: any) {
+      console.error('Logout error:', error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async verify(req: AuthRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Not authenticated'
+        });
+      }
+
+      const projectId = req.headers['x-project-id'] as string;
+      const user = await authService.verifyToken(req.user.userId, projectId);
+
+      return res.json({
+        success: true,
+        user
+      });
+    } catch (error: any) {
+      console.error('Verify error:', error.message);
+      return res.status(401).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async changePassword(req: AuthRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Not authenticated'
+        });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password and new password are required'
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 6 characters'
+        });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId }
+      });
+
+      if (!user || !user.password) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials'
+        });
+      }
+
+      const isValid = await comparePassword(currentPassword, user.password);
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Current password is incorrect'
+        });
+      }
+
+      const hashedPassword = await hashPassword(newPassword);
+
+      await prisma.user.update({
+        where: { id: req.user.userId },
+        data: { password: hashedPassword }
+      });
+
+      return res.json({
+        success: true,
+        message: 'Password changed successfully'
+      });
+    } catch (error: any) {
+      console.error('Change password error:', error.message);
+      return res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async updateEmail(req: AuthRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Not authenticated'
+        });
+      }
+
+      const { newEmail, password } = req.body;
+
+      if (!newEmail || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'New email and password are required'
+        });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId }
+      });
+
+      if (!user || !user.password) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials'
+        });
+      }
+
+      const isValid = await comparePassword(password, user.password);
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid password'
+        });
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: newEmail }
+      });
+
+      if (existingUser && existingUser.id !== req.user.userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email is already in use'
+        });
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: req.user.userId },
+        data: { email: newEmail }
+      });
+
+      const {
+        password: _,
+        refreshToken: __,
+        resetToken: ___,
+        resetTokenExpiry: ____,
+        providerId: _____,
+        role: ______,
+        ...userWithoutSensitive
+      } = updatedUser;
+
+      return res.json({
+        success: true,
+        message: 'Email updated successfully',
+        user: userWithoutSensitive
+      });
+    } catch (error: any) {
+      console.error('Update email error:', error.message);
+      return res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async createProject(req: Request, res: Response): Promise<Response> {
+    try {
+      const { name, description } = req.body;
+
+      if (!name) {
+        return res.status(400).json({
+          success: false,
+          message: 'Project name is required'
+        });
+      }
+
+      const project = await authService.createProject(name, description);
+
+      return res.json({
+        success: true,
+        data: {
+          id: project.id,
+          name: project.name,
+          apiKey: project.apiKey,
+          description: project.description
+        }
+      });
+    } catch (error: any) {
+      console.error('Create project error:', error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+}
